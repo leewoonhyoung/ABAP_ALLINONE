@@ -63,3 +63,6 @@ WRITE : LV_TCHAR, LV_TFLOAT, LV_NUMER.
 
 
 
+
+
+
