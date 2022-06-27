@@ -110,3 +110,37 @@ CODE>
 data : lv_id TYPE ZC5T07001-ID. //1번 TABLE의 ID 타입을 따르는 변수를 선언하겠다.W
 
 
+/***************실습 과제 *****************/
+
+REPORT zc5r070001.
+
+      //werks 를 참조하는 structure 를 만드세요
+      //werks 를 참조하는 table을 만들어 주세요
+
+      //timestamp를 참조하는 timetable를 만들어주세요.
+      //timestamp를 참조하는 internal table을 만들어주세요
+
+      //mara 라는 table에 속한  matnr를 참조하겠습니다.
+      //t001w라는 table에 속한 werks(data element로) 가져오세요.
+
+
+Data : ls_werks TYPE werks,
+       lt_werks type table of werks,
+
+       ls_timetable TYPE ZC5S07TIMESTAMP,
+       lt_timetable like table of ls_timetable,
+
+       lv_matnr type mara-matnr,
+       lv_werks type werks_d.
+
+
+
+/********* 과제 *********//
+code>
+
+DATA :
+  zc5e07text  TYPE text25,
+  lv_text     LIKE zc5e07text,
+  ls_header   TYPE zc5s07localstructure,
+  lt_header   LIKE TABLE OF ls_header,
+  ls_head_tmp LIKE ls_header.
