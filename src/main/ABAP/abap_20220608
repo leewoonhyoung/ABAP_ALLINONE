@@ -95,3 +95,43 @@ DATA : BEGIN OF ldata_ma,
        lt_afko TYPE TABLE OF ltype_afko.
 
 *------------------------------------------------------------------------
+
+**------------------------------------------------------------------------
+*다음 필드를 참조하는 구조체를 선언하세요 . LTY => NOT WORK AREA
+TYPES : BEGIN OF lty_04,
+          art       TYPE qmat-art,
+          matnr     TYPE qmat-matnr,
+          werks     TYPE qmat-werks,
+          ppl       TYPE qmat-ppl,
+          spezueber TYPE qmat-spezueber,
+          conf      TYPE qmat-conf,
+          tls       TYPE qmat-tls,
+        END OF lty_04.
+
+* 다음 필드를 참조하는 구조체를 선언하세요. DATA => WORK AREA
+DATA : BEGIN OF ldata_04,
+         art       TYPE qmat-art,
+         matnr     TYPE qmat-matnr,
+         werks     TYPE qmat-werks,
+         ppl       TYPE qmat-ppl,
+         spezueber TYPE qmat-spezueber,
+         conf      TYPE qmat-conf,
+         tls       TYPE qmat-tls,
+       END OF ldata_04,
+
+
+*4번 테이블을 참조하는 로컬 스트럭쳐와 인터널 테이블을 선언할것
+       ls_04 TYPE zc5t07004,
+       lt_04 TYPE TABLE OF zc5t07004,
+
+
+* LTY_04 구초체를 참조하는 로컬 스트럭쳐와 인터널 테이블 선언
+       ls_04_LTY TYPE lty_04,
+       lt_04_LTY TYPE TABLE OF lty_04,
+
+* LDATA_04 구조체를을 참조하는 로컬 스트럭쳐와 인터널 테이블을 선언할것
+       ls_04_LDATA LIKE ldata_04,
+       lt_04_LDATA LIKE TABLE OF ldata_04.
+
+**------------------------------------------------------------------------
+
