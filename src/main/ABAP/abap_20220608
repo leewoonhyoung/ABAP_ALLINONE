@@ -1,0 +1,66 @@
+
+*------------------------------------------------------------------------*
+REPORT zc5r070002.
+DATA :
+*      3번 스트럭처를 참조하는 로컬 스트럭쳐를 선언하세요
+       ls_structure_no3     TYPE zc5s07003,
+
+*      3번 스트럭쳐를 참조하는 인터널 테이블을 선언하세요
+       lt_structure_no3     LIKE TABLE OF ls_structure_no3,
+
+*      3번 스트럭처의 kokrs , belnr,gjahr 필드를 참조하는 변수를 선언하세요.
+       lv_kokrs             TYPE zc5s07003-kokrs,
+       lv_belnr             TYPE zc5s07003-belnr,
+       lv_gjahr             TYPE zc5s07003-gjahr,
+
+*       위에서 선언한 변수를 참조하는 변수를 선언하세요.
+       lv_kokrs_tmp         LIKE lv_kokrs,
+       lv_belnr_tmp         LIKE lv_belnr,
+       lv_gjahr_tmp         LIKE lv_gjahr,
+
+*       3번 스트럭쳐를 참조해서 선언된 로컬 스트럭처를 참조하는 로컬 스트럭처,table를  선언
+       ls_structure_no3_tmp LIKE ls_structure_no3,
+       lt_structure_no3_tmp LIKE TABLE OF ls_structure_no3_tmp.
+
+*------------------------------------------------------------------------*
+
+*20220628 code.
+*------------------------------------------------------------------------*
+* type는 변수를 선언할수 없다. 단지 정의만 내릴뿐 프로그램 상에서 data의 흐름에 관여하지 못한다.
+* types 구조체를 data 구문으로 선언 하려고 할때에는 type으로 사용 가능하다.
+
+*TYPES : BEGIN OF lty_member,
+*          id   TYPE zc5t07001-id,
+*          name TYPE zc5t07001-name,
+*          addr TYPE zc5t07001-addr,
+*
+*        END OF lty_member.
+*
+*        lty_member-id = 'id' // 해당 code 사용 불가
+
+*data ls_member type lty_member. // 이렇게 실행하면 type 형식으로 바뀌기 때문에 ls_member를 사용 가능하다.
+
+
+*-----------------------------------------------------------------------
+
+* 각자가 만든 2번 테이블의 필드중 gender 필드를 제외한 나머지 필드를 가진 구조를 정의할것
+*TYPES : BEGIN OF lty_goods,
+*          id          TYPE zc5t07002-id,
+*          cart_id     TYPE zc5t07002-cart_id,
+*          goods       TYPE zc5t07002-goods,
+*          category    TYPE zc5t07002-category,
+*          goods_count TYPE zc5t07002-goods_count,
+*          goods_desc  TYPE zc5t07002-goods_desc,
+*        END OF lty_goods.
+*
+**2번 테이블을 참조하는 로컬 스트럭쳐와 인터널 테이블을 선언할것
+** 위에서 정의한 구조를 참조하는 로컬 스트럭쳐를 선언할것
+** 위에서 정의한 로컬 스트럭쳐를 참조하는 인터널 테이블을 선언할것
+*DATA : ls_goods TYPE zc5t07002,
+*       lt_goods TYPE table of zc5t07002,
+*       ls_goods_2 TYPE lty_goods,
+*       lt_goods_2 TYPE TABLE OF ls_goods_2.
+*       LS_GOODS_3 LIKE LS_GOODS_2,
+*       LT_GOODS_3 LIKE TABLE OF LS_GOODS_3.
+
+*-----------------------------------------------------------------------
