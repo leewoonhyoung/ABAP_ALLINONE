@@ -60,7 +60,38 @@ DATA :
 *       lt_goods TYPE table of zc5t07002,
 *       ls_goods_2 TYPE lty_goods,
 *       lt_goods_2 TYPE TABLE OF ls_goods_2.
-*       LS_GOODS_3 LIKE LS_GOODS_2,
-*       LT_GOODS_3 LIKE TABLE OF LS_GOODS_3.
+*       LT_GOODS_3 LIKE TABLE OF LS_GOODS_2.
 
 *-----------------------------------------------------------------------
+
+
+*------------------------------------------------------------------------
+
+TYPES : BEGIN OF ltype_afko,
+  aufnr type afko-aufnr,
+  plnbez type afko-plnbez,
+  plnty type afko-plnty,
+  plnnr type afko-plnnr,
+  plnaw type afko-plnaw,
+  plnal type afko-plnal,
+  end of ltype_afko.
+
+
+* 아래의 필드를 가진 work area로써 기능을 가진 구조체를 선언
+DATA : BEGIN OF ldata_ma,
+         vbeln TYPE lips-vbeln,
+         posnr TYPE lips-posnr,
+         pstyv TYPE lips-pstyv,
+         matnr TYPE lips-matnr,
+         matwa TYPE lips-matwa,
+         matkl TYPE lips-matkl,
+       END OF ldata_ma,
+
+*      위 구조체를 참조하는 인터널 테이블을 선언하세요
+       lt_data_ma like table of ldata_ma,
+
+*      위 type를 참조하는 로컬 스트럭쳐와 인터널 테이블을 선언해주세요
+       ls_afko type ltype_afko,
+       lt_afko TYPE TABLE OF ltype_afko.
+
+*------------------------------------------------------------------------
