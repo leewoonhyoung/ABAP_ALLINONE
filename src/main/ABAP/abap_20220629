@@ -1,0 +1,169 @@
+
+**********************************************************************************
+
+*header 가 없을 경우 table 과 sturcture 를 날릴떄 사용 방법:
+
+DATA : ls_mara       TYPE mara,
+      lt_mara like table of mara.
+
+*
+CLEAR ls_mara,
+
+* internal table이 가지고 있는 data를 나렬버린다.
+REFRESH lt_mara
+
+ls_mara-matnr = 'AA'.
+ls_mara-mtart = 'bb'.
+
+
+APPEND ls_mara TO lt_mara.
+
+ls_mara-mtart = 'cc'.
+APPEND ls_mara TO lt_mara.
+
+BREAK-POINT.
+
+**********************************************************************************
+
+***********************************************************************************
+*
+*data :  BEGIN OF ls_scarr,
+*  carrid type scarr-carrid,
+*  carrname type scarr-carrname,
+*  carrcode type scarr-carrcode,
+*  end of ls_scarr,
+*
+*  lt_scarr like table of ls_scarr.
+*
+*  data : BEGIN OF
+*
+*
+*
+*clear : ls_scarr.
+*REFRESH lt_scarr.
+*
+**select 구문에서 mandt는 사용하지말고  따로 dto를 만들어서 data 를 관리하게 하자.
+*select carrid carrname currcode
+*   into table lt_scarr
+*   from scarr.
+
+***********************************************************************************
+***********************************************************************************
+
+DATA : BEGIN OF ls_sflight,
+
+
+         carrid   TYPE  sflight-carrid,
+         connid   TYPE  sflight-connid,
+         fldate   TYPE  sflight-fldate,
+         price    TYPE  sflight-price,
+         currency TYPE  sflight-currency,
+
+       END OF ls_sflight,
+
+       lt_sflight LIKE TABLE OF ls_sflight.
+
+CLEAR :ls_sflight.
+REFRESH  : lt_sflight.
+
+
+SELECT carrid connid fldate price currency
+  INTO TABLE lt_sflight
+  FROM sflight.
+  ***********************************************************************************
+
+  ***********************************************************************************
+
+  DATA : LS_SFLIGHT TYPE  SFLIGHT,
+         LT_SFLIGHT TYPE TABLE OF SFLIGHT.
+
+  CLEAR : LS_SFLIGHT.
+  REFRESH :LT_SFLIGHT.
+
+  SELECT carrid connid fldate price currency
+    INTO CORRESPONDING FIELDS OF LS_SFLIGHT
+    FROM SFLIGHT.
+    ENDSELECT.
+
+  ***********************************************************************************
+
+  ***********************************************************************************
+
+  *DATA : ls_scarr TYPE  sflight,
+  *       lt_scarr TYPE TABLE OF sflight.
+  *
+  *CLEAR : ls_scarr.
+  *REFRESH :lt_scarr.
+  *
+  *SELECT carrid carrname currcode
+  *  INTO CORRESPONDING FIELDS OF LS_scarr
+  *  FROM scarr
+  *  WHERE carrid = 'AA'
+  *  OR carrid = 'LH'.
+  *
+  *ENDSELECT.
+  *
+  ***********************************************************************************
+
+
+  ***********************************************************************************
+
+    DATA : ls_data TYPE  sflight,
+           lt_data TYPE TABLE of sflight.
+
+    clear : ls_data.
+    REfresh lt_data.
+
+
+    SELECT carrid connid fldate currency planetype
+      INTO CORRESPONDING FIELDS OF table lt_data
+      FROM sflight
+      WHERE currency = 'USD'
+      AND planetype = '747-400'.
+
+   ***********************************************************************************
+
+
+*  ***********************************************************************************
+
+
+data :  ls_scarr type scarr.
+
+clear : ls_scarr.
+
+*single 쓰면 fields of 까지만 사용해주세요!   절대 fields of table을 사용하지 마세요
+select single carrid carrname currcode
+  into CORRESPONDING FIELDS OF ls_carr
+  from scarr
+  where carrid = 'AA'.
+
+
+**************************************************************************************
+
+
+***************************************************************************************
+
+* <사진 못찍음>
+DATA : BEGIN OF ls_data,
+
+         carrid   TYPE sflight-carrid,
+         connid   TYPE sflight-connid,
+         fldate   TYPE sflight-fldate,
+         bookid   TYPE sbook-bookid,
+         customid TYPE sbook-customid,
+         custtype TYPE sbook-custtype,
+       END OF ls_data,
+
+
+       lt_data LIKE TABLE OF ls_data.
+
+
+SELECT carrid connid fldate bookid customid custtype
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbook
+  WHERE carrid ='LH'
+  AND connid = '0401'
+  AND customid = '25'.
+
+
+***************************************************************************************
