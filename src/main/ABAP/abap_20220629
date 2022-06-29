@@ -167,3 +167,155 @@ SELECT carrid connid fldate bookid customid custtype
 
 
 ***************************************************************************************
+
+****************************************************************************************
+
+** <사진 못찍음>
+DATA : BEGIN OF ls_data,
+
+         carrid   TYPE sflight-carrid,
+         connid   TYPE sflight-connid,
+         fldate   TYPE sflight-fldate,
+         bookid   TYPE sbook-bookid,
+         customid TYPE sbook-customid,
+         custtype TYPE sbook-custtype,
+       END OF ls_data,
+
+
+       lt_data LIKE TABLE OF ls_data.
+
+clear : ls_data.
+REFRESH : lt_Data.
+
+SELECT carrid connid fldate bookid customid custtype
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbook
+  WHERE carrid ='LH'
+  AND connid = '0401'
+  AND customid = '25'.
+
+ LOOP AT lt_data into ls_Data.
+   write : ls_data-bookid, / .
+ ENDLOOP.
+****************************************************************************************
+
+*
+** <사진 못찍음>
+*DATA : BEGIN OF ls_data,
+*
+*         carrid   TYPE sflight-carrid,
+*         connid   TYPE sflight-connid,
+*         fldate   TYPE sflight-fldate,
+*         bookid   TYPE sbook-bookid,
+*         customid TYPE sbook-customid,
+*         custtype TYPE sbook-custtype,
+*       END OF ls_data,
+*
+*
+*       lt_data LIKE TABLE OF ls_data.
+*
+*clear : ls_data.
+*REFRESH : lt_Data.
+*
+*  ne = not equal , <> 포함하지 않는다. X > X보다 큰것
+*SELECT carrid connid fldate bookid customid custtype
+*  INTO CORRESPONDING FIELDS OF TABLE lt_data
+*  FROM sbook
+*  WHERE carrid ne 'LH'
+*  AND connid = '0401'
+*  AND customid = '25'.
+*
+* LOOP AT lt_data into ls_Data.
+*   write : ls_data-bookid, / .
+* ENDLOOP.
+
+****************************************************************************************
+
+****************************************************************************************
+*
+*
+*DATA : BEGIN OF ls_data,
+*
+*  id type scustom-id,
+*  name type  scustom-name,
+*  form type scustom-form,
+*  street type scustom-street,
+*  city type scustom-city,
+*  email type scustom-email,
+*
+*  end of ls_data,
+*
+*  lt_data like TABLE OF ls_data.
+*
+*
+*  SELECT id form region
+*    into CORRESPONDING FIELDS OF TABLE lt_data
+*    from scustom
+*    where id >= '24'
+*    and form <> 'Fima'
+*    and region = 'PA'.
+*
+*    LOOP AT lt_data into ls_data  .
+*      WRITE : ls_data-id, /.
+*    ENDLOOP.
+*
+*****************************************************************************************
+
+DATA : BEGIN OF ls_data,
+         MTART TYPE t134-MTART,
+         MTREF TYPE t134-MTREF,
+         MBREF TYPE t134-MBREF,
+         PSTAT TYPE t134-PSTAT,
+         VMTPO TYPE t134-VMTPO,
+
+       END OF ls_data,
+
+       lt_data LIKE TABLE OF ls_data.
+
+SELECT MTART MTREF MBREF FLREF ARDEL
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM t134
+  WHERE mtref = 'HAWA'
+  AND   mbref = 'ROH'
+  AND   flref NE 'WERT'
+  AND   ardel >= '0'.
+
+LOOP AT lt_data INTO ls_data.
+  WRITE : ls_data-mtart, /.
+
+ENDLOOP.
+
+
+DATA : BEGIN OF ls_data2,
+         BWART TYPE t156-BWART,
+         SHKZG TYPE t156-SHKZG,
+         KZWES TYPE t156-KZWES,
+         SELPA TYPE t156-SELPA,
+         XPBED TYPE t156-XPBED,
+       END OF ls_data2,
+
+       lt_data2 LIKE TABLE OF ls_data2.
+
+SELECT BWART KZWES KZDRU SELPA
+  INTO CORRESPONDING FIELDS OF TABLE lt_data2
+  FROM t156
+  WHERE KZWES = 'S'
+  AND KZDRU = '1'
+  AND SELPA ne ' '.
+
+
+LOOP  : AT lt_data2 INTO ls_data2.
+  WRITE ls_data2-BWART.
+
+ENDLOOP.
+
+***refactoring****
+
+LOOP  : AT lt_data INTO ls_data,
+  AT lt_data2 into ls_data2.
+
+  WRITE : ls_data-mtart, /,
+  ls_data2-BWART.
+
+ENDLOOP.
+*****************************************************************************************
