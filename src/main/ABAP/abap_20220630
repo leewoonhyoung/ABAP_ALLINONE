@@ -170,3 +170,32 @@ ENDLOOP.
 *마무리 하고 행단위 전체 data를 정렬 하기 위함.
 SORT lt_data BY fldate DESCENDING.
 **********************Display : order by study_end*************************
+
+
+**********************Display : or과 in *************************
+WHERE (carrid   = 'DL' and planetype = 'A340-600')
+  or (carrid   = 'DL' and custtype   = 'P').
+
+ and planetype in( 'A340-600', '747-400').
+
+**********************Display : 인터널 테이블을 계속 추가하는 방법 'appending을 사용하자.'*************************
+   INTO CORRESPONDING FIELDS OF TABLE lt_data
+   FROM sbook
+   WHERE (carrid   = 'DL' and planetype = 'A340-600')
+   or (carrid   = 'DL' and custtype   = 'P')
+
+
+   SELECT smoker carrid connid fldate bookid customid custtype invoice class
+   appending CORRESPONDING FIELDS OF TABLE lt_data
+   FROM sbook
+   WHERE carrid = 'AA'
+   and planetype in( 'A340-600', '747-400').
+
+
+   SELECT smoker carrid connid fldate bookid customid custtype invoice class
+   appending CORRESPONDING FIELDS OF TABLE lt_data
+   FROM sbook
+   WHERE carrid = 'AA'
+     and planetype not in ('A340-600', '747-400').
+
+
