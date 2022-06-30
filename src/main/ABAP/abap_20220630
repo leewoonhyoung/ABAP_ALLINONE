@@ -199,3 +199,94 @@ WHERE (carrid   = 'DL' and planetype = 'A340-600')
      and planetype not in ('A340-600', '747-400').
 
 
+     **************************************과제*************************************************
+     DATA : BEGIN OF ls_data,
+              carrid    TYPE scarr-carrid,
+              carrname  TYPE scarr-carrname,
+              connid    TYPE spfli-connid,
+              countryfr TYPE spfli-countryfr,
+              cityfrom  TYPE  spfli-cityfrom,
+              airpto    TYPE spfli-airpto,
+            END OF ls_data,
+
+            lt_data LIKE TABLE OF ls_data.
+
+
+     CLEAR ls_data.
+     REFRESH lt_data.
+
+     * 조건 1
+     SELECT carrid carrname
+     INTO CORRESPONDING FIELDS OF TABLE lt_data
+       FROM scarr
+       WHERE carrid IN ( 'AA', 'AZ', 'DL' ).
+
+     IF  sy-subrc NE 0.
+       WRITE : 'error', /.
+       LOOP AT lt_data INTO ls_data.
+
+            WRITE : ls_data-carrid, ls_data-carrname.
+         NEW-LINE.
+       ENDLOOP.
+     ENDIF.
+
+     * 조건 2
+     SELECT carrid connid countryfr cityfrom airpto
+     APPENDING CORRESPONDING FIELDS OF TABLE lt_data
+     FROM spfli
+     WHERE carrid IN ( 'AA', 'AZ', 'DL' )
+     AND cityfrom IN ( 'ROME', 'FRANKFURT' ).
+
+
+***********************************************************************************
+*
+*DATA : BEGIN OF ls_data,
+*         carrid    TYPE scarr-carrid,
+*         carrname  TYPE scarr-carrname,
+*         connid    TYPE spfli-connid,
+*         countryfr TYPE spfli-countryfr,
+*         cityfrom  TYPE  spfli-cityfrom,
+*         airpto    TYPE spfli-airpto,
+*       END OF ls_data,
+*
+*       lt_data LIKE TABLE OF ls_data.
+*
+*
+*CLEAR ls_data.
+*REFRESH lt_data.
+*
+** 조건 1
+*SELECT carrid carrname
+*INTO CORRESPONDING FIELDS OF TABLE lt_data
+*  FROM scarr
+*  WHERE carrid IN ( 'AA', 'AZ', 'DL' ).
+*
+*IF  sy-subrc eq 0.
+*  LOOP AT lt_data INTO ls_data.
+*       WRITE : ls_data-carrid, ls_data-carrname, ls_data-connid,
+*               ls_data-countryfr, ls_data-cityfrom, ls_data-airpto.
+*       NEW-LINE.
+*  ENDLOOP.
+*ENDIF.
+*
+** 조건 2
+*SELECT carrid connid countryfr cityfrom airpto
+*APPENDING CORRESPONDING FIELDS OF TABLE lt_data
+*FROM spfli
+*WHERE carrid IN ( 'AA', 'AZ', 'DL' )
+*AND cityfrom IN ( 'ROME', 'FRANKFURT' ).
+*
+* if sy-subrc eq 0.
+*   LOOP AT lt_data into ls_data.
+*
+*     write : ls_data-carrid, ls_data-carrname, ls_data-connid,
+*             ls_data-countryfr, ls_data-cityfrom, ls_data-airpto.
+*     new-LINE.
+*
+*   ENDLOOP.
+*
+* ENDIF.
+
+*****************************************************************************************
+
+
