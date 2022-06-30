@@ -1,0 +1,172 @@
+***********************************************************
+
+*DATA : BEGIN OF ls_data,
+*         MTART TYPE t134-MTART,
+*         MTREF TYPE t134-MTREF,
+*         MBREF TYPE t134-MBREF,
+*         PSTAT TYPE t134-PSTAT,
+*         VMTPO TYPE t134-VMTPO,
+*
+*       END OF ls_data,
+*
+*       lt_data LIKE TABLE OF ls_data.
+*
+*SELECT MTART MTREF MBREF FLREF ARDEL
+*  INTO CORRESPONDING FIELDS OF TABLE lt_data
+*  FROM t134
+*  WHERE mtref = 'HAWA'
+*  AND   mbref = 'ROH'
+*  AND   flref NE 'WERT'
+*  AND   ardel >= '0'.
+*
+*
+*IF sy-subrc = 0.
+*  WRITE :
+*  'match data',/,
+*  'sy-dbcnt의 갯수 :' , sy-dbcnt.
+*ELSE.
+*  WRITE :
+*        'no match data'.
+*
+*ENDIF.
+*
+*
+*
+*
+*DATA : BEGIN OF ls_data2,
+*         bwart TYPE t156-bwart,
+*         shkzg TYPE t156-shkzg,
+*         kzwes TYPE t156-kzwes,
+*         selpa TYPE t156-selpa,
+*         xpbed TYPE t156-xpbed,
+*       END OF ls_data2,
+*
+*       lt_data2 LIKE TABLE OF ls_data2.
+*
+*
+*SELECT kzwes kzdru selpa
+*  INTO CORRESPONDING FIELDS OF TABLE lt_data2
+*  FROM t156
+*  WHERE kzwes = 'S'
+*  AND kzdru = '1'
+*  AND selpa NE ' '.
+*
+*
+*IF sy-subrc = 0.
+*  WRITE :
+*  'match data',/,
+*  'sy-dbcnt의 갯수 :' , sy-dbcnt.
+*ELSE.
+*  WRITE :
+*        'no match data'.
+*
+*ENDIF.
+
+
+***********************************************************
+
+
+DATA : ls_data TYPE sflight,
+       lt_data TYPE TABLE OF sflight.
+
+
+CLEAR ls_data.
+REFRESH lt_data.
+
+
+SELECT carrid connid fldate currency
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sflight
+  WHERE carrid = 'aa'.
+
+* abap에서 x는  참이다.
+
+IF sy-subrc = 0.
+
+  LOOP AT lt_data INTO ls_data.
+    IF ls_data-currency = 'USD'.
+       ls_data-currency = 'KRW'.
+
+      MODIFY lt_data FROM ls_data  index sy-tabix // 핵심 코드.!
+      transporting currency.
+    ENDIF.
+
+    WRITE : ls_data-currency.
+    NEW-LINE.
+
+  ENDLOOP.
+
+  LOOP AT lt_data INTO ls_data.
+    WRITE : ls_data-currency.
+
+  ENDLOOP.
+
+***********************************************************
+
+DATA : ls_data           TYPE sbook,
+       lt_data           TYPE TABLE OF sbook,
+       success_count(20) TYPE i,
+       fail_count(20)    TYPE i.
+
+SELECT carrid connid fldate bookid customid custtype invoice class
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbook
+  WHERE carrid   = 'DL'
+  AND custtype   = 'P'
+  AND order_date = '20201227'.
+
+
+*LOOP AT lt_data INTO ls_data.
+*  WRITE ls_data-carrid.
+*
+*ENDLOOP.
+
+LOOP AT lt_data INTO ls_data.
+
+  IF ls_data-invoice = 'X'.
+    ls_data-class   ='F'.
+
+    MODIFY lt_data FROM ls_data INDEX sy-tabix
+    TRANSPORTING class.
+
+
+  ENDIF.
+
+ENDLOOP.
+
+
+***********************************************************
+
+**********************Display : order by study*************************
+
+
+DATA : ls_data           TYPE sbook,
+       lt_data           TYPE TABLE OF sbook,
+       success_count(20) TYPE i,
+       fail_count(20)    TYPE i.
+
+SELECT carrid connid fldate bookid customid custtype invoice class
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbook
+  WHERE carrid   = 'DL'
+  AND custtype   = 'P'
+  AND order_date = '20201227'
+  ORDER BY carrid connid fldate DESCENDING bookid DESCENDING.
+
+
+LOOP AT lt_data INTO ls_data.
+
+  IF ls_data-invoice = 'X'.
+     ls_data-class   ='F'.
+
+    MODIFY lt_data FROM ls_data INDEX sy-tabix
+    TRANSPORTING class.
+
+
+  ENDIF.
+
+ENDLOOP.
+
+*마무리 하고 행단위 전체 data를 정렬 하기 위함.
+SORT lt_data BY fldate DESCENDING.
+**********************Display : order by study_end*************************
