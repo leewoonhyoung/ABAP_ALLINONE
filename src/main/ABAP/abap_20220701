@@ -1,0 +1,139 @@
+data : lv_cnt(5) type p.
+
+DO lv_cnt TIMES.
+WRITE :  'a', /.
+
+
+ENDDO.
+
+****************************************
+
+*lines 를 사용하면 data의 갯수를 확인해준다. .count()
+*describe table x lines y  x의 데이터 값을 y에 할당해주세요.
+
+if sy-subrc eq 0.
+
+  lv_ct = lines(lt_data).
+
+  DESCRIBE TABLE lt_data lines lv_cnt.
+
+
+
+  ENDIF
+
+****************************************
+DATA : ls_data TYPE scarr,
+       lt_data TYPE TABLE OF scarr.
+
+
+CLEAR ls_data.
+REFRESH lt_data.
+
+
+SELECT carrid carrname
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM scarr
+  WHERE carrid in ( 'AA', 'AZ', 'DL' ).
+
+  if sy-subrc eq 0.
+
+    READ TABLE lt_data into ls_data INDEX 2.
+
+    write ls_data-carrname.
+
+    ENDIF.
+
+****************************************
+
+DATA : ls_data     TYPE scarr,
+       lt_data     TYPE TABLE OF scarr,
+       lv_cnt(100) TYPE i.
+
+
+CLEAR ls_data.
+REFRESH lt_data.
+
+
+SELECT carrid carrname
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM scarr
+  WHERE carrid IN ( 'AA', 'AZ', 'DL' ).
+
+IF sy-subrc EQ 0.
+
+  lv_cnt = lines( lt_data ).
+
+  DO lv_cnt TIMES.
+    READ TABLE lt_data INTO ls_data INDEX sy-index.
+
+    IF sy-subrc = 0.
+      write :  ls_data-carrname.
+      NEW-LINE.
+    ENDIF.
+
+  ENDDO.
+
+ENDIF.
+****************************************
+DATA: BEGIN OF ls_data,
+        carrid     TYPE sflight-carrid,
+        connid     TYPE sflight-connid,
+        fldate     TYPE sflight-fldate,
+        currency   TYPE sflight-currency,
+        planetype  TYPE sflight-planetype,
+        seatsocc_b TYPE sflight-seatsocc_b,
+
+      END OF ls_data,
+
+      lv_ct(100) TYPE i,
+      lt_data    LIKE TABLE OF ls_data.
+
+CLEAR : ls_data.
+REFRESH lt_data.
+
+
+SELECT carrid connid fldate currency planetype seatsocc_b
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sflight
+  WHERE currency = 'USD'
+  AND planetype  = '747-400'.
+
+
+
+
+IF  sy-subrc EQ 0.
+
+  lv_ct = lines( lt_data ).
+
+  DO lv_ct TIMES.
+
+*sy-index를 번호 별로 만들어서 lt_data에 집어넣어라.
+    READ TABLE lt_data INTO ls_data INDEX sy-index.
+
+* sy-index 가 정말 잘 되있는지 확인하기.
+    IF sy-subrc EQ 0.
+
+      IF ls_data-carrid     = 'UA'.
+        ls_data-seatsocc_b += 5.
+
+        MODIFY lt_data FROM ls_data INDEX sy-tabix
+        TRANSPORTING seatsocc_b.
+
+      ENDIF.
+
+
+    ENDIF.
+
+
+  ENDDO.
+
+
+ELSE.
+
+  WRITE : 'Error'.
+
+ENDIF.
+
+
+
+******************************************************************
