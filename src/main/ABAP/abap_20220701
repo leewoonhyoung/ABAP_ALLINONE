@@ -137,3 +137,104 @@ ENDIF.
 
 
 ******************************************************************
+
+******************************************************************
+IF  sy-subrc EQ 0.
+
+  LOOP AT lt_data INTO ls_data.
+
+    IF ls_data-carrid = 'UA'.
+       ls_data-seatsocc_b += 5.
+
+       MODIFY it_data from is_data INDEX sy-tabix
+       TRANSPORTING seatsocc_b.
+
+    ENDIF.
+
+  ENDLOOP.
+
+
+  IF  sy-subrc EQ 0.
+
+  LOOP AT lt_data INTO ls_data WHERE carrid eq 'UA'.
+
+       ls_data-seatsocc_b += 5.
+
+       MODIFY it_data from is_data INDEX sy-tabix
+       TRANSPORTING seatsocc_b.
+x
+
+  ENDLOOP.
+  ******************************************************************
+
+  *
+  *DATA : ls_data TYPE sbuspart,
+  *       lt_data TYPE TABLE OF sbuspart,
+  *       lv_count(10) type i.
+  *
+  *CLEAR    : ls_data.
+  *REFRESH  :lt_data.
+  *lv_count = 0.
+  *
+  *
+  *SELECT BUSPARTNUM CONTACT CONTPHONO BUSPATYP
+  *  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  *  FROM sbuspart
+  *  WHERE contphono <> ''.
+  *
+  *
+  *LOOP AT lt_data INTO ls_data where contact = 'Meyer' or buspatyp = 'TA'.
+  *
+  *    ls_data-contphono ='02-345-2034'.
+  *    lv_count         += 1.
+  *
+  *    modify lt_data from ls_data INDEX sy-tabix
+  *    TRANSPORTING contphono.
+  *
+  *ENDLOOP.
+  *
+  *write lv_count.
+  *
+  *cl_demo_output=>display( lt_data ).
+  *
+
+  ******************************************************************
+
+******************************************************************
+
+data : ls_data TYPE ZC5V07002,
+       lt_data TYPE TABLE OF ZC5V07002.
+
+
+clear : ls_data.
+refresh : lt_data.
+
+
+SELECT carrid planetype fldate
+  into CORRESPONDING FIELDS OF TABLE lt_data
+  from  ZC5V07002
+  where carrid = 'UA'
+  and   planetype in ( 'A380-800', '767-200' ).
+
+  LOOP AT lt_data INTO ls_data.
+    IF ls_data-fldate   = '20210228'.
+      ls_data-planetype = '757F'.
+
+      MODIFY lt_data FROM ls_data INDEX sy-tabix
+      TRANSPORTING planetype.
+
+
+    ELSEIF ls_data-fldate = '20210328'.
+      ls_data-planetype   = 'L-1011-100'.
+
+      MODIFY lt_data FROM ls_data INDEX sy-tabix
+      TRANSPORTING planetype.
+
+    ENDIF.
+
+  ENDLOOP.
+
+
+cl_demo_output=>display( lt_data ).
+  ******************************************************************
+
