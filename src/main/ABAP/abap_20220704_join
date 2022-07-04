@@ -1,0 +1,99 @@
+DATA: BEGIN OF ls_data,
+        carrid     TYPE sflight-carrid,
+        connid     TYPE sflight-connid,
+        fldate     TYPE sflight-fldate,
+        currency   TYPE sflight-currency,
+        planetype  TYPE sflight-planetype,
+        seatsocc_b TYPE sflight-seatsocc_b,
+
+      END OF ls_data,
+
+      lv_ct(100) TYPE i,
+      lt_data    LIKE TABLE OF ls_data.
+
+CLEAR : ls_data.
+REFRESH lt_data.
+
+
+SELECT carrid connid fldate currency planetype seatsocc_b
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sflight
+  WHERE currency = 'USD'
+  AND planetype  = '747-400'.
+
+
+IF  sy-subrc EQ 0.
+
+READ TABLE lt_data into ls_data
+WITH KEY carrid = 'UA'
+         connid = '3517'
+         fldate = '20200929'.
+
+
+ if sy-subrc eq 0.
+
+   endif.
+
+else.
+
+ write : 'exception'.
+
+ENDIF.
+*************************************************************************************
+*************************************************************
+
+
+DATA : BEGIN OF ls_mara,
+         matnr TYPE mara-matnr,
+         maktx TYPE makt-maktx,
+         mtart TYPE mara-mtart,
+         matkl TYPE mara-matkl,
+       END OF ls_mara.
+
+
+
+DATA : BEGIN OF ls_makt,
+         matnr TYPE makt-matnr,
+         maktx TYPE makt-maktx,
+       END OF ls_makt.
+
+
+
+
+DATA : lt_mara  LIKE TABLE OF ls_mara,
+       lt_makt  LIKE TABLE OF ls_makt,
+       lv_tabix TYPE sy-tabix.
+
+
+CLEAR : ls_mara, ls_makt.
+REFRESH : lt_mara, lt_makt.
+
+
+SELECT matnr mtart matkl
+INTO CORRESPONDING FIELDS OF TABLE lt_mara
+FROM mara.
+
+SELECT matnr maktx
+  INTO CORRESPONDING FIELDS OF TABLE lt_makt
+  FROM makt
+  WHERE spras = sy-langu.
+
+
+LOOP AT lt_mara INTO ls_mara.
+
+  lv_tabix = sy-tabix.
+
+  READ TABLE lt_makt INTO ls_makt
+  WITH KEY matnr = ls_mara-matnr.
+
+  IF sy-subrc EQ 0.
+    ls_mara-maktx = ls_makt-maktx.
+
+    MODIFY lt_mara FROM ls_mara INDEX lv_tabix
+       TRANSPORTING maktx.
+
+  ENDIF.
+
+ENDLOOP.
+
+*************************************************************

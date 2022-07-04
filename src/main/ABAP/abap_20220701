@@ -237,4 +237,179 @@ SELECT carrid planetype fldate
 
 cl_demo_output=>display( lt_data ).
   ******************************************************************
+  DATA : BEGIN OF ls_spfli,
+           carrid   TYPE spfli-carrid,
+           carrname TYPE scarr-carrname,
+           url      TYPE scarr-url,
+           connid   TYPE spfli-connid,
+           airpfrom TYPE spfli-airpfrom,
+           airpto   TYPE spfli-airpto,
+           deptime  TYPE spfli-deptime,
+           arrtime  TYPE spfli-arrtime,
+
+         END OF ls_spfli.
+
+
+  DATA : BEGIN OF ls_scarr,
+           carrid   TYPE scarr-carrid,
+           carrname TYPE scarr-carrname,
+           url      TYPE scarr-url,
+         END OF ls_scarr.
+
+
+  DATA : lt_spfli LIKE TABLE OF ls_spfli,
+         lt_scarr LIKE TABLE OF ls_scarr,
+         lv_tabix TYPE sy-tabix.
+  *       lv_cnt   TYPE i.
+
+
+  CLEAR   : ls_spfli, ls_scarr.
+  REFRESH : lt_spfli, lt_scarr.
+
+  SELECT carrid connid airpfrom airpto deptime arrtime
+    INTO CORRESPONDING FIELDS OF TABLE lt_spfli
+    FROM  spfli.
+
+
+  SELECT carrid carrname url
+    INTO CORRESPONDING FIELDS OF TABLE lt_scarr
+    FROM scarr.
+
+
+  LOOP AT lt_spfli INTO ls_spfli.
+
+    lv_tabix = sy-tabix.
+
+    READ TABLE lt_scarr INTO ls_scarr
+    WITH KEY carrid = ls_spfli-carrid.
+
+    IF sy-subrc EQ 0.
+
+      ls_spfli-carrname = ls_scarr-carrname.
+      ls_spfli-url      = ls_scarr-url.
+
+  *    lv_cnt           += 1.
+
+      MODIFY lt_spfli FROM ls_spfli INDEX lv_tabix
+      TRANSPORTING carrname url.
+
+
+    ELSE.
+      WRITE : 'sy-subrc error'.
+
+    ENDIF.
+
+  ENDLOOP.
+  ******************************************************************
+DATA : BEGIN OF ls_data,
+
+         matnr TYPE mara-matnr,
+         maktx TYPE makt-maktx,    "MATNR 사용해서 join"
+         mtart TYPE mara-mtart,   "mtart 사용해서 join'
+         mtbez TYPE t134t-mtbez,
+         mbrsh TYPE mara-mbrsh,   "mbrsh 사용해서 join"
+         mbbez TYPE t137t-mbbez,
+         tragr TYPE mara-tragr,   "tragr 사용해서 join"
+         vtext TYPE ttgrt-vtext,
+
+       END OF ls_data,
+
+       lt_data  LIKE TABLE OF ls_data,
+
+       ls_maktx TYPE makt,
+       lt_maktx TYPE TABLE OF makt,
+       ls_mtbez TYPE t134t,
+       lt_mtbez TYPE TABLE OF t134t,
+       ls_mbbez TYPE t137t,
+       lt_mbbez TYPE TABLE OF t137t,
+       ls_vtext TYPE ttgrt,
+       lt_vtext TYPE TABLE OF ttgrt,
+
+       lv_tabix TYPE sy-tabix.
+
+clear : ls_data , ls_maktx , ls_mtbez , ls_mbbez , ls_vtext.
+refresh : lt_data , lt_maktx , lt_mtbez , lt_mbbez , lt_vtext.
+
+
+SELECT matnr mtart mbrsh tragr
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM mara.
+
+select matnr maktx
+  INTO CORRESPONDING FIELDS OF table lt_maktx
+  from makt
+  where spras = sy-langu.
+
+select mtbez
+  INTO CORRESPONDING FIELDS OF table lt_mtbez
+  from t134t
+  where spras = sy-langu.
+
+select mbbez
+  INTO CORRESPONDING FIELDS OF table lt_mbbez
+  from t137t
+  where spras = sy-langu.
+
+select vtext
+  INTO CORRESPONDING FIELDS OF table lt_vtext
+  from ttgrt
+  where spras = sy-langu.
+
+
+LOOP AT lt_data INTO ls_data.
+
+  lv_tabix = sy-tabix.
+
+  READ TABLE lt_maktx INTO ls_maktx
+  WITH KEY matnr = ls_data-matnr.
+
+  IF sy-subrc EQ 0.
+    ls_data-maktx = ls_maktx-maktx.
+
+    MODIFY lt_data FROM ls_data INDEX lv_tabix
+    TRANSPORTING maktx.
+  ENDIF.
+
+  "산업 영역 세팅"
+  READ TABLE lt_mtbez INTO ls_mtbez
+  WITH KEY mtart = ls_data-mtart.
+
+  IF sy-subrc EQ 0.
+    ls_data-mtbez = ls_mtbez-mtbez.
+
+    MODIFY lt_data FROM ls_data INDEX lv_tabix
+    TRANSPORTING mtbez.
+
+  ENDIF.
+
+
+  READ TABLE lt_mbbez INTO ls_mbbez
+  WITH KEY mbrsh = ls_data-mbrsh.
+
+  IF sy-subrc EQ 0.
+    ls_data-mbbez = ls_mbbez-mbbez.
+
+    MODIFY lt_data FROM ls_data INDEX lv_tabix
+    TRANSPORTING mbbez.
+
+  ENDIF.
+
+
+  READ TABLE lt_vtext INTO ls_vtext
+  WITH KEY tragr = ls_data-tragr.
+
+  IF sy-subrc EQ 0.
+
+    ls_data-vtext = ls_vtext-vtext.
+
+    MODIFY lt_data FROM ls_data INDEX lv_tabix
+    TRANSPORTING vtext.
+
+  ENDIF.
+
+ENDLOOP.
+
+  ******************************************************************
+
+
 
