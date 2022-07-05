@@ -1,0 +1,374 @@
+MESSAGE 'hello' TYPE 'S' DISPLAY LIKE 'W'.
+
+**********************************************
+REPORT zc5r070007 MESSAGE-ID OO.
+
+MESSAGE S001.
+
+// MESSAGE-ID 는 OO꺼를 사용하고 MESSAGE TYPE 은 S이며 001번을 사용하겠다.
+
+****************************************************************************************************
+REPORT zc5r070007 MESSAGE-ID OO.
+
+MESSAGE S002 WITH 'A' 'B' DISPLAY LIKE 'E'
+
+WITH 를 사용하면 &가 있는 부분에 파라미터를 입력해서
+"A B IS ALREADY EXIST" 라는 문구를 얻을 수 있다.
+****************************************************************************************************
+"일시적으로 다른 부분에 있는 MESSAGE를 사용하고 싶을때 사용하는 방법.
+
+"MESSAGE 타입+번호+(메세지 CLASS) WITH '나오고 싶은 ERROR 명'
+MESSAGE S002(OO) WITH 'DATA EXCEPTION'.
+
+****************************************************************************************************
+*SELECTION-SCREEN BEGIN OF BLOCK BL1 WITH FRAME TITLE TEXT-T01.
+*PARAMETERS : P_CARRID TYPE SCARR-CARRID OBLIGATORY DEFAULT 'LH',
+*             p_currcd type scarr-currcode.
+*
+*
+*SELECTION-SCREEN END OF BLOCK BL1.
+*
+*
+***********************************************************************
+*
+*OBLIGATORY => 필수 입력값 조건을 주는 기능.
+*DEFAULT => 기본값 주는 기능.
+*LOWER CASE => DISCRIPTION에서 소문자를 사용해야 할떄.
+
+*NO INTERVALS => 박스 하나 사라짐
+*NO EXTENSION => 보내기 아이콘 사라짐. => MULTIPLE 한 입력이 불가능해진다.
+
+*사용자의 선택을 하나만 고를수 있게 하는 것 => 라디오 버튼 과 리스트 박스가 있다.
+
+****************************************************************************************************
+
+"OBLIGATORY 는 필수로 입력해야 할때 사용한다."
+"DEFAULT는 SELECTION SCREEN 에 이미 변수 값이 입력해지는 코드"
+"BLOCK 다음에 이름을 주는것은 필수!"
+
+
+*SELECTION-SCREEN BEGIN OF BLOCK BL1 WITH FRAME TITLE TEXT-T01.
+*PARAMETERS : P_CARRID TYPE SCARR-CARRID OBLIGATORY DEFAULT 'LH',
+*             p_currcd type scarr-currcode.
+*
+*
+*SELECTION-SCREEN END OF BLOCK BL1.
+
+
+
+*DATA : LS_SCARR TYPE scarr,
+*      LT_SCARR TYPE TABLE OF scarr.
+*
+*clear : ls_scarr.
+*refresh : lt_scarr.
+*
+*
+*select carrid carrname currcode url
+*  into CORRESPONDING FIELDS OF TABLE lt_scarr
+*  from scarr
+*  where carrid = p_carrid
+*  or currcode = p_currcd.
+*
+*  if sy-subrc eq 0.
+*
+*    cl_demo_output=>display( lt_scarr ).
+*
+*  else.
+*MESSAGE s000(zc507) with 'data not found' DISPLAY LIKE 'E'.
+*
+*  endif.
+**********************************************
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS : p_carrid TYPE sflight-carrid OBLIGATORY,
+               p_connid TYPE sflight-connid.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+**********************************************************************
+
+DATA : lt_data TYPE TABLE OF sflight.
+
+REFRESH : lt_data.
+
+"P_CONNNID NE SAPCE , P_CONNID NE 0 , P_CONNID IS INITIAL"
+
+IF p_connid EQ ''.  "IS INITIAL도 가능하다."
+
+  SELECT carrid connid fldate price currency planetype seatsmax
+    INTO CORRESPONDING FIELDS OF TABLE lt_data
+    FROM sflight
+    WHERE carrid = p_carrid.
+
+"함수화 하기"
+  IF sy-subrc EQ 0.
+
+    cl_demo_output=>display( lt_data ).
+
+  ELSE.
+    MESSAGE s000(zc507) WITH '파라미터 틀렸다'.
+  ENDIF.
+
+ELSE.
+
+  SELECT carrid connid fldate price currency planetype seatsmax
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sflight
+  WHERE carrid = p_carrid
+  AND   connid = p_connid.
+
+  IF sy-subrc EQ 0.
+
+    cl_demo_output=>display( lt_data ).
+
+  ELSE.
+    MESSAGE s000(zc507) WITH '파라미터 틀렸다'.
+  ENDIF.
+
+
+
+ENDIF.
+*************************************************************
+"여기서 TABLES 는 SELECT-OPTION의 TABLE을 선언하게 해준다. (필수)"
+" SO_CARR 구분에서 FOR를 사용했는데  SELECT-OPTION 에서는 TYPE 대신 FOR를 사용한다."
+TABLES : SFLIGHT.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  SELECT-OPTIONS : SO_CARR FOR SFLIGHT-CARRID.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+**********************************************************************
+TABLES : sflight.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE Text-t01.
+  SELECT-OPTIONS : so_carr for sflight-carrid.
+  SELECTION-SCREEN END OF BLOCK bl1.
+
+
+
+data :  lt_sflight type table of sflight,
+        ls_sflight type sflight.
+
+"clear 는 대가리만 날림 == 대가리는 바로 사용이 가능하다.  , refresh 는 몸통을 날림"
+"clear : so_carr, so_carr[]처럼 써야 몸통과 대가리가 날라간다."
+  refresh : lt_sflight, so_carr.
+
+
+select carrid connid fldate price currency planetype seatsmax
+  INTO CORRESPONDING FIELDS OF TABLE lt_sflight
+  from sflight
+  WHERE carrid in so_carr.
+
+"select-option으로 만들어진 녀석들은 header를 가지고 있기 떄문에 structure로써의 변환의 필요 없이 바로 사용이 가능하다."
+
+LOOP AT so_carr.
+   so_carr-low = 'BB'.
+
+*   APPEND ls_sflight to lt_flight.
+*   Append so_scarr
+
+
+ENDLOOP.
+
+**********************************************************************
+TABLES : sflight.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE Text-t01.
+  PARAMETERS : pa_carr type sflight-carrid .
+  SELECT-OPTIONS : so_conn for sflight-connid no INTERVALS no-extension.
+  SELECTION-SCREEN END OF BLOCK bl1.
+
+
+data :  lt_sflight type table of sflight,
+        ls_sflight type sflight.
+
+"clear 는 대가리만 날림 == 대가리는 바로 사용이 가능하다.  , refresh 는 몸통을 날림"
+"clear : so_carr, so_carr[]처럼 써야 몸통과 대가리가 날라간다."
+  refresh : lt_sflight.
+  clear : ls_sflight.
+
+
+select carrid connid fldate price currency planetype seatsmax
+  INTO CORRESPONDING FIELDS OF TABLE lt_sflight
+  from sflight
+  WHERE carrid eq pa_carr
+  and connid in so_conn.
+
+  "select option은 조건을 따로 주지 않으면 사용 안하겠다고 프로그램에서 인지한다."
+  "마치 if 문으로 select를 나누었던 것처럼!"
+
+  cl_demo_output=>display( lt_sflight ).
+
+
+"select-option으로 만들어진 녀석들은 header를 가지고 있기 떄문에 structure로써의 변환의 필요 없이 바로 사용이 가능하다."
+
+*LOOP AT so_carr.
+*   so_carr-low = 'BB'.
+*
+**   APPEND ls_sflight to lt_flight.
+**   Append so_scarr
+*
+*
+*ENDLOOP.
+**********************************************************************
+"uline 은 선그려주기"
+  SELECTION-SCREEN ULINE.
+
+  "skip 은 공백 만들어주기."
+  SELECTION-SCREEN SKIP 9.
+
+
+  **********************************************************************
+TABLES sbuspart.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS : pa_num TYPE sbuspart-buspartnum OBLIGATORY.
+  SELECTION-SCREEN SKIP 1.
+  SELECTION-SCREEN ULINE.
+  SELECT-OPTIONS : so_tact FOR sbuspart-contact LOWER CASE NO INTERVALS. "todo high값 입력 불가 속성 No intervals".
+  SELECTION-SCREEN ULINE.
+  PARAMETERS : ta RADIOBUTTON GROUP rb1 DEFAULT 'X',
+               fc RADIOBUTTON GROUP rb1.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+**********************************************************************
+
+DATA : lt_data TYPE TABLE OF sbuspart.
+
+
+IF ta EQ 'X'.
+
+  SELECT buspartnum contact contphono buspatyp
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbuspart
+  WHERE buspartnum = pa_num
+  and contact      in so_tact
+  and buspatyp     = 'TA'.
+
+    "subrc로 검증"
+    IF sy-subrc eq 0.
+
+      MESSAGE s000(zc507) with  'yes_ta'.
+
+      cl_demo_output=>display( lt_data ).
+
+    else.
+      MESSAGE s000(zc507) with  'error-ta'.
+    ENDIF.
+
+
+  ELSEIF fc EQ 'X'.
+
+    SELECT buspartnum contact contphono buspatyp
+    INTO CORRESPONDING FIELDS OF TABLE lt_data
+    FROM sbuspart
+    WHERE buspartnum = pa_num
+    and contact      in so_tact
+    and buspatyp     = 'FC'.
+
+
+    "subrc로 검증"
+    IF sy-subrc eq 0.
+
+      MESSAGE s000(zc507) with  'yes_fc'.
+      cl_demo_output=>display( lt_data ).
+
+    else.
+      MESSAGE s000(zc507) with  'error-fc'.
+    ENDIF.
+
+ENDIF.
+*****************************************************
+DATA : LV_CASE VALUE '1'.
+
+CASE lv_case.
+  WHEN '1'.
+    MESSAGE S000(ZC507) WITH '1이다 '.
+  WHEN '2'.
+    MESSAGE S000(ZC507) WITH '2이다 '.
+  WHEN OTHERS.
+    MESSAGE S000(ZC507) WITH 'OTHER이다 '.
+ENDCASE.
+
+
+DATA : LV_CASE VALUE '1'.
+DATA : LV_CASE2 VALUE '2'.
+DATA : LV_CASE3 VALUE '3'.
+DATA : LV_CASE4 VALUE '4'.
+      .
+
+CASE '1'.
+  WHEN LV_CASE.
+    MESSAGE S000(ZC507) WITH '1이다 '.
+  WHEN LV_CASE2.
+    MESSAGE S000(ZC507) WITH '2이다 '.
+  WHEN OTHERS.
+    MESSAGE S000(ZC507) WITH 'OTHER이다 '.
+ENDCASE.
+
+**********************************************************************
+TABLES sbuspart.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS : pa_num TYPE sbuspart-buspartnum OBLIGATORY.
+  SELECTION-SCREEN SKIP 1.
+  SELECTION-SCREEN ULINE.
+  SELECT-OPTIONS : so_tact FOR sbuspart-contact LOWER CASE NO INTERVALS.  "소문자 입력이 이미 domain 선에서 case-sensitive가능했지만 한번 써보세요."
+  SELECTION-SCREEN ULINE.
+  PARAMETERS : pa_ta RADIOBUTTON GROUP rb1 DEFAULT 'X',
+               pa_fc RADIOBUTTON GROUP rb1.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+**********************************************************************
+
+DATA : lt_data TYPE TABLE OF sbuspart.
+
+
+REFRESH lt_data.
+
+
+
+CASE 'X'.
+  WHEN pa_ta.
+
+  SELECT buspartnum contact contphono buspatyp
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbuspart
+  WHERE buspartnum = pa_num
+  and contact      in so_tact
+  and buspatyp     = 'TA'.
+
+    IF sy-subrc eq 0.
+
+      MESSAGE s000(zc507) with  'yes_fc'.
+      cl_demo_output=>display( lt_data ).
+
+    else.
+      MESSAGE s000(zc507) DISPLAY LIKE 'E' with  'error-fc'.
+    ENDIF.
+
+
+  WHEN pa_fc.
+
+    SELECT buspartnum contact contphono buspatyp
+    INTO CORRESPONDING FIELDS OF TABLE lt_data
+    FROM sbuspart
+    WHERE buspartnum = pa_num
+    and contact      in so_tact
+    and buspatyp     = 'FC'.
+
+
+    IF sy-subrc eq 0.
+
+      MESSAGE s000(zc507) with  'yes_fc'.
+      cl_demo_output=>display( lt_data ).
+
+    else.
+      MESSAGE s000(zc507) DISPLAY LIKE 'E' with  'error-fc'.
+    ENDIF.
+
+  WHEN OTHERS.
+ENDCASE.
