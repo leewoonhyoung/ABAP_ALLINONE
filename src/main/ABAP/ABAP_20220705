@@ -536,3 +536,50 @@ IF sy-subrc EQ 0.
   cl_demo_output=>display( lt_data ).
 
 ENDIF.
+*********************************************************************
+TABLES : mara, marc.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS     : pa_werks TYPE marc-werks OBLIGATORY DEFAULT '1010'.
+  SELECT-OPTIONS : so_matnr FOR mara-matnr,
+                   so_mtart FOR mara-mtart,
+                   so_ekgrp FOR marc-ekgrp.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+DATA : BEGIN OF ls_data,
+         matnr TYPE mara-matnr,
+         maktx TYPE makt-maktx,
+         mtart TYPE mara-mtart,
+         matkl TYPE mara-matkl,
+         meins TYPE mara-meins,
+         tragr TYPE mara-tragr,
+         pstat TYPE marc-pstat,
+         dismm TYPE marc-dismm,
+         ekgrp TYPE marc-ekgrp,
+
+       END OF ls_data,
+
+       lt_data LIKE TABLE OF ls_data.
+"text join 은 outer join을 걸자"
+SELECT a~matnr a~mtart a~matkl a~meins a~tragr
+       b~pstat b~dismm b~ekgrp
+       c~maktx
+INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM mara AS a
+  inner JOIN marc AS b
+      ON  a~matnr = b~matnr
+  inner JOIN makt AS c
+   ON  a~matnr = c~matnr
+
+  where b~werks = pa_werks
+  and a~matnr in so_matnr
+  and a~mtart in so_mtart
+  and b~ekgrp in so_ekgrp
+  and c~spras = sy-langu.
+
+IF sy-subrc EQ 0.
+
+  cl_demo_output=>display( lt_data ).
+
+ENDIF.
