@@ -372,3 +372,167 @@ CASE 'X'.
 
   WHEN OTHERS.
 ENDCASE.
+
+***********************************************************************
+**********************************************************************
+"with header line 을 사용하면 sturcture 과 같이 work area로 사용할수 있다.
+"하지만 header line을 없이 코딩하는 습관을 기르자.
+
+DATA : lt_data TYPE TABLE OF sbuspart WITH HEADER LINE.
+
+DATA : BEGIN OF ls_part,
+         buspart TYPE sbuspart-buspartnum,
+         contact TYPE sbuspart-contact,
+       END OF ls_part,
+
+       "header를 가진 lt_table을 만드는 방법 with header line
+       lt_part LIKE TABLE OF ls_part- WITH HEADER LINE.
+
+"heADER를 가진 LT_TABLE을 만드는 방법 occurs 0을 사용하기
+DATA : BEGIN OF lt_part OCCURS 0,
+         buspart TYPE sbuspart-buspartnum,
+         contact TYPE sbuspart-contact,
+       END OF lt_part,
+
+       lt_part_2 TYPE sbuspart OCCURS 0 WITH HEADER LINE.
+
+
+
+****************************************************************************************
+
+TABLES sbook.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS : pa_carr TYPE sbook-carrid OBLIGATORY DEFAULT 'AA'.
+
+  "select - options는  sign option low high 를 가지고 있다.
+  SELECT-OPTIONS : so_conn  FOR sbook-connid OBLIGATORY.
+  PARAMETERS     : pa_custp TYPE sbook-custtype AS LISTBOX
+                   VISIBLE LENGTH 20.
+  "sy- datlo => 현지 날짜"
+  SELECT-OPTIONS : so_fldt  FOR sbook-fldate DEFAULT sy-datum,
+                   so_bkid  FOR sbook-bookid,
+                   so_cutid FOR sbook-customid NO-EXTENSION NO INTERVALS.
+
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+
+**********************************************************************
+DATA : BEGIN OF lt_data OCCURS 0,
+         carrid   TYPE sbook-carrid,
+         connid   TYPE sbook-connid,
+         fldate   TYPE sbook-fldate,
+         bookid   TYPE sbook-bookid,
+         customid TYPE sbook-customid,
+         custtype TYPE sbook-custtype,
+         invoice  TYPE sbook-invoice,
+         class    TYPE sbook-class,
+       END OF lt_data,
+
+       lv_tabix TYPE sy-tabix.
+
+" lt_data2 like lt_data occurs 0 with header line.
+" lt_datt3 like table of lt_data with header line.
+
+"clear header 날림"   "refresh 는 몸통을 날림"
+CLEAR : lt_data, lt_data[].
+
+
+SELECT carrid connid fldate bookid customid custtype invoice class
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbook
+  WHERE carrid EQ pa_carr
+  AND connid   IN so_conn
+  AND custtype EQ  pa_custp
+  AND fldate   IN so_fldt
+  AND bookid   IN so_bkid
+  AND customid IN so_cutid.
+
+
+IF sy-subrc EQ 0.
+
+  LOOP AT lt_data.
+
+    lv_tabix = sy-tabix.
+
+    CASE lt_data-invoice.
+      WHEN 'X'.
+        lt_data-class   = 'F'.
+
+        MODIFY lt_data INDEX lv_tabix TRANSPORTING class.
+    ENDCASE.
+
+  ENDLOOP.
+  cl_demo_output=>display( lt_data[] ).
+  else.
+    MESSAGE s000(zc507) WITH 'Error'.
+
+Endif.
+
+****************************************************************************************************
+TABLES : sflight, sbook.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-x01.
+  PARAMETERS     : pa_carid TYPE sflight-carrid OBLIGATORY.
+  SELECT-OPTIONS : so_conid FOR sflight-connid OBLIGATORY.
+  PARAMETERS     : pa_ptype TYPE sflight-planetype AS LISTBOX VISIBLE LENGTH 10.
+  SELECT-OPTIONS : so_bokid FOR sbook-bookid,
+                   so_cutyp FOR sbook-custtype NO INTERVALS NO-EXTENSION.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+
+DATA : BEGIN OF ls_data,
+         carrid     TYPE   sflight-carrid,
+         connid     TYPE   sflight-connid,
+         fldate     TYPE   sflight-fldate,
+         planetype  TYPE   sflight-planetype,
+         paymentsum TYPE   sflight-paymentsum,
+         currency   TYPE   sflight-currency,
+         bookid     TYPE sbook-bookid,
+         customid   TYPE sbook-customid,
+         custtype   TYPE sbook-custtype,
+         class      TYPE sbook-class,
+         order_date TYPE sbook-order_date,
+         agencynum  TYPE sbook-agencynum,
+
+       END OF ls_data,
+
+       lt_data  LIKE TABLE OF ls_data,
+       lv_tabix TYPE sy-tabix.
+
+"flight 부모table sbook 자식 table  carrid connid fldate 포함
+
+SELECT a~carrid a~connid a~fldate a~planetype a~paymentsum a~currency
+       b~bookid b~customid b~custtype b~order_date b~agencynum
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sflight AS a
+  INNER JOIN sbook AS b
+          ON a~carrid = b~carrid
+         AND a~connid = b~connid
+         AND a~fldate = b~fldate
+  WHERE a~carrid    = pa_carid
+  AND   a~connid    IN so_conid
+  AND   a~planetype = pa_ptype
+  AND   b~bookid    IN so_bokid
+  AND   b~custtype  IN so_cutyp.
+
+IF sy-subrc EQ 0.
+
+  LOOP AT lt_data INTO ls_data.
+
+    lv_tabix = sy-tabix.
+
+    IF ls_data-custtype = 'B'.
+         ls_data-class  = 'C'.
+      MODIFY lt_data FROM ls_data INDEX lv_tabix
+      TRANSPORTING class.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  cl_demo_output=>display( lt_data ).
+
+ENDIF.
