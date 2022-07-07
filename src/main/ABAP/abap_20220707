@@ -1,0 +1,371 @@
+* 꼭 binary search를 해야한다면 sort를 꼭 하자.
+*sort lt_data by carrid carrname.
+*
+*
+*read table lt_data with key carrid =''
+*                             carrnaem = ''
+*                             binary search.
+
+**********************************************************************
+
+data : lt_sflight TYPE TABLE OF sflight,
+       ls_sflight like LINE OF lt_sflight,
+       lt_temp    like TABLE OF ls_sflight,
+       ls_temp    like line of lt_temp.
+
+clear :  ls_sflight.
+refresh : lt_sflight, lt_temp.
+
+SELECT carrid connid fldate price currency
+  into CORRESPONDING FIELDS OF TABLE lt_sflight
+  FROM sflight
+  where carrid =  'AA'.
+
+  LOOP AT lt_sflight into ls_sflight.
+
+*    ls_temp-carrid = ls_temp-carrid.
+*    ls_temp-connid = ls_temp-connid.
+*    ls_temp-currency = ls_temp-cuurency.
+*    ls_temp-fldate = ls_temp-fldate.
+*    ls_temp-price = ls_temp-price.
+
+     MOVE-CORRESPONDING ls_sflight to ls_temp.
+
+
+    append ls_temp to lt_temp.
+    clear ls_temp.
+
+  ENDLOOP.
+
+
+  sort lt_temp by carrid connid.
+  "lt_temp 에 존재한는 all field 를 써서 중복을ㅇ 제거해 주세요. + 무조건 전처리로 sort 해주기!!!"
+  DELETE ADJACENT DUPLICATES FROM lt_temp COMPARING ALL FIELDS.
+
+  ********************************************************************
+  TABLES : sflight, sbook.
+
+  SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+    PARAMETERS     : pa_carid    TYPE sflight-carrid OBLIGATORY.
+    SELECT-OPTIONS : co_conid    FOR  sflight-connid OBLIGATORY.
+    PARAMETERS     : pa_ptype    TYPE sflight-planetype AS LISTBOX VISIBLE LENGTH 10.
+    SELECT-OPTIONS : so_bokid    FOR  sbook-bookid.
+  SELECTION-SCREEN END OF BLOCK bl1.
+
+  **********************************************************************
+
+  DATA : BEGIN OF ls_data_1,
+
+           carrid    TYPE      sflight-carrid,
+           connid    TYPE      sflight-connid,
+           fldate    TYPE      sflight-fldate,
+           planetype TYPE      sflight-planetype,
+           currency  TYPE      sflight-currency,
+           bookid    TYPE      sbook-bookid,
+           customid  TYPE      sbook-customid,
+           custtype  TYPE      sbook-custtype,
+           class     TYPE      sbook-class,
+           agencynum TYPE      sbook-agencynum,
+
+         END OF ls_data_1,
+
+         lt_data_1 like TABLE of ls_data_1.
+
+  clear   : ls_data_1.
+  refresh : lt_data_1.
+
+
+  DATA : BEGIN OF ls_data_2,
+
+           carrid    TYPE      sflight-carrid,
+           connid    TYPE      sflight-connid,
+           fldate    TYPE      sflight-fldate,
+           bookid    TYPE      sbook-bookid,
+           customid  TYPE      sbook-customid,
+           custtype  TYPE      sbook-custtype,
+           agencynum TYPE      sbook-agencynum,
+
+         END OF ls_data_2,
+
+         lt_data_2 like TABLE of ls_data_2.
+
+  clear   : ls_data_2.
+  refresh : lt_data_2.
+
+  select sflight~carrid
+         sflight~connid
+         sflight~fldate
+         sflight~planetype
+         sflight~currency
+         sbook~bookid
+         sbook~customid
+         sbook~custtype
+         sbook~class
+         sbook~agencynum
+  INTO CORRESPONDING FIELDS OF TABLE lt_data_1
+  FROM sflight as sflight INNER JOIN sbook as sbook
+    on  sflight~carrid    =   sbook~carrid
+    and sflight~connid    =   sbook~connid
+    and sflight~fldate    =   sbook~fldate
+  where sflight~carrid    =   pa_carid
+    and sflight~connid    in  co_conid
+    and sflight~planetype =   pa_ptype
+    and sbook~bookid      in  so_bokid.
+
+
+
+
+  LOOP AT lt_data_1 INTO ls_data_1.
+
+    IF ls_data_1-custtype eq 'B'.
+
+      MOVE-CORRESPONDING ls_data_1 to ls_data_2.
+
+      append ls_data_2 to lt_data_2.
+      clear : ls_data_2.
+
+    ENDIF.
+
+  ENDLOOP.
+
+  sort lt_data_2 by carrid connid fldate.
+
+  DELETE ADJACENT DUPLICATES FROM lt_data_2
+  COMPARING carrid connid fldate.
+
+  if sy-subrc eq 0.
+
+    cl_demo_output=>display( lt_data_2 ).
+
+  endif.
+
+****************************************************************
+
+TABLES sbuspart.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  SELECT-OPTIONS : so_busnm for sbuspart-buspartnum OBLIGATORY.
+  PARAMETERS : pa_ta RADIOBUTTON GROUP rg1 DEFAULT 'X',
+               pa_fc RADIOBUTTON GROUP rg1.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+data : lt_data TYPE TABLE of sbuspart,
+       ls_data TYPE sbuspart.
+
+clear : ls_data.
+REFRESH lt_data.
+
+
+SELECT BUSPARTNUM CONTACT CONTPHONO BUSPATYP
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  from sbuspart
+  where buspartnum in so_busnm.
+
+
+CASE 'X'.
+  WHEN pa_ta.
+  DELETE lt_data where buspatyp <> 'TA'.
+
+  WHEN pa_fc.
+  DELETE lt_data where buspatyp <> 'FC'.
+ENDCASE.
+
+
+
+
+
+IF sy-subrc eq 0.
+
+  cl_demo_output=>display( lt_data ).
+
+ENDIF.
+*****************************************************************
+CASE 'X'.
+	WHEN pa_ta.
+
+    LOOP AT lt_data INTO ls_data where buspatyp ne 'TA'.
+      DELETE lt_data INDEX sy-tabix.
+
+    ENDLOOP.
+
+	WHEN pa_fc.
+    LOOP AT lt_data into ls_data where buspatyp ne 'FC'.
+      DELETE lt_data INDEX
+
+    ENDLOOP.
+
+	WHEN OTHERS.
+ENDCASE.
+
+
+LOOP AT lt_data INTO ls_data.
+
+  CASE 'X'.
+  	WHEN pa_ta.
+
+      if ls_data-buspatyp ne 'TA'.
+        DELETE lt_data INDEX sy-tabix.
+
+  	WHEN pa_fc.
+      IF ls_data-buspatyp ne 'FC'.
+        DELETE lt_Data INDEX sy-tabix.
+      ENDIF.
+
+  ENDCASE.
+
+ENDLOOP.
+**************************************************************
+
+TABLES sbuspart.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  SELECT-OPTIONS : so_busnm FOR sbuspart-buspartnum.
+  PARAMETERS : pa_ta RADIOBUTTON GROUP gr1 DEFAULT 'X',
+               pa_fc RADIOBUTTON GROUP gr1.
+SELECTION-SCREEN END OF BLOCK bl1.
+
+data : ls_data TYPE sbuspart,
+       lt_data TYPE TABLE of sbuspart.
+
+SELECT buspartnum contact contphono buspatyp
+  INTO CORRESPONDING FIELDS OF TABLE lt_data
+  FROM sbuspart
+  WHERE buspartnum IN so_busnm.
+
+
+LOOP AT lt_data INTO ls_data.
+
+  IF ls_data-buspatyp = 'TA'.
+
+     IF ls_data-buspatyp <> 'TA'.
+        clear : ls_data-buspatyp.
+
+       MODIFY lt_data from ls_data INDEX sy-tabix
+       TRANSPORTING buspartnum contact contphono buspatyp.
+     ENDIF.
+
+     IF ls_data-buspatyp <> 'FC'.
+        clear : ls_data-buspatyp.
+
+       MODIFY lt_data from ls_data INDEX sy-tabix
+       TRANSPORTING buspartnum contact contphono buspatyp.
+
+     ENDIF.
+
+  ENDIF.
+
+
+ENDLOOP.
+
+BREAK-POINT.
+
+
+********************************************************
+TABLES : sflight.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS     : pa_carid TYPE sflight-carrid OBLIGATORY DEFAULT 'LH'.
+  SELECT-OPTIONS : so_conid FOR sflight-connid OBLIGATORY,
+                   so_fdate FOR sflight-fldate.
+SELECTION-SCREEN END OF BLOCK bl1.
+
+DATA : BEGIN OF ls_data,
+         carrid     TYPE sflight-carrid,
+         carrname   TYPE zc5v07003-carrname,
+         connid     TYPE sflight-connid,
+         fldate     TYPE sflight-fldate,
+         cityfrom   TYPE zc5v07003-cityfrom,
+         cityto     TYPE zc5v07003-cityto,
+         planetype  TYPE sflight-planetype,
+         seatsmax_b TYPE sflight-seatsmax_b,
+         url        TYPE zc5v07003-url,
+       END OF ls_data.
+
+
+DATA : lt_data LIKE TABLE OF ls_data.
+
+
+SELECT s~carrid
+       v~carrname
+       s~connid
+       s~fldate
+       v~cityfrom
+       v~cityto
+       s~planetype
+       s~seatsmax_b
+       v~url
+INTO CORRESPONDING FIELDS OF TABLE lt_data
+FROM sflight AS s INNER JOIN zc5v07003 AS v
+ON s~carrid = v~carrid
+AND s~connid = v~connid
+WHERE s~carrid = pa_carid
+  AND s~connid IN so_conid
+  AND s~fldate IN so_fdate.
+
+LOOP AT lt_data INTO ls_data.
+
+  IF ls_data-seatsmax_b EQ '30'.
+    ls_data-planetype = '747-400'.
+
+    MODIFY lt_data FROM ls_data INDEX sy-tabix
+    TRANSPORTING planetype.
+
+  ELSEIF ls_data-seatsmax_b EQ '31'.
+    ls_data-planetype = 'A340-600'.
+
+    MODIFY lt_data FROM ls_data INDEX sy-tabix
+    TRANSPORTING planetype.
+
+  ELSE.
+    CLEAR :ls_data-planetype.
+
+    MODIFY lt_data FROM ls_data INDEX sy-tabix
+    TRANSPORTING planetype.
+
+  ENDIF.
+
+ENDLOOP.
+
+
+
+**********************another solution 2********************************
+
+clear ls_data.
+REFRESH lt_data.
+
+LOOP AT lt_data into ls_data.
+
+  CASE ls_data-seatsmax_b.
+
+  WHEN '30'.
+      ls_data-planetype = '747-400'.
+
+      MODIFY lt_data FROM ls_data INDEX sy-tabix
+      TRANSPORTING planetype.
+
+
+  WHEN '31'.
+      ls_data-planetype = 'A340-600'.
+
+      MODIFY lt_data FROM ls_data INDEX sy-tabix
+      TRANSPORTING planetype.
+
+
+  WHEN OTHERS.
+
+    CLEAR :ls_data-planetype.
+
+ENDCASE.
+
+
+ENDLOOP.
+
+
+
+
+IF  sy-subrc EQ 0.
+
+  cl_demo_output=>display( lt_data ).
+
+ENDIF.
