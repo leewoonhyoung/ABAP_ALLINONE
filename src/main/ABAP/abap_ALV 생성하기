@@ -1,0 +1,302 @@
+FORM set_fcat_layout .
+
+  gs_layout-zebra = 'X'.
+  gs_layout-sel_mode = 'D'.
+
+  gs_fcat-fieldname = 'CARRID'. "carrid필드만 나오게 하는 기능
+  gs_fcat-coltext   = 'ID'. " 화면에는 carrid 가 id로 놔아야한다.
+
+  append gs_fcat to gt_fcat.
+  CLEAR : gs_fcat.
+
+  gs_fcat-fieldname = 'CARRNAME'. "carrid필드만 나오게 하는 기능
+  gs_fcat-coltext   = 'Airline'. " 화면에는 carrcname  Airline으로 놔아야한다.
+
+  append gs_fcat to gt_fcat.
+  CLEAR : gs_fcat.
+
+  gs_fcat-fieldname = 'CURRCODE'. "DB : CURRCODE
+  gs_fcat-coltext   = 'Currency'. " VIEW : Currency
+
+  append gs_fcat to gt_fcat.
+  CLEAR : gs_fcat.
+
+  gs_fcat-fieldname = 'URL'.                  "DB : CURRCODE
+  gs_fcat-coltext   = 'Airline Homepage'.     " VIEW : Currency
+
+  append gs_fcat to gt_fcat.
+  CLEAR : gs_fcat.
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*& Report ZC5R070018
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE ZC5R070018_TOP                          .    " Global Data
+
+ INCLUDE ZC5R070018_S01                          .  " Selection Screen
+ INCLUDE ZC5R070018_O01                          .  " PBO-Modules
+ INCLUDE ZC5R070018_I01                          .  " PAI-Modules
+ INCLUDE ZC5R070018_F01                          .  " FORM-Routines
+
+
+ START-OF-SELECTION.
+
+ PERFORM get_data.
+
+
+ call SCREEN '0101'.
+
+
+ *&---------------------------------------------------------------------*
+ *& Include          ZC5R070018_F01
+ *&---------------------------------------------------------------------*
+ *&---------------------------------------------------------------------*
+ *& Form get_data
+ *&---------------------------------------------------------------------*
+ *& text
+ *&---------------------------------------------------------------------*
+ *& -->  p1        text
+ *& <--  p2        text
+ *&---------------------------------------------------------------------*
+ FORM get_data .
+
+   CLEAR   : gs_sflight.
+   REFRESH : gt_sflight.
+
+   SELECT carrid connid fldate price currency planetype
+     INTO CORRESPONDING FIELDS OF TABLE gt_sflight
+     FROM  sflight
+     WHERE connid IN so_conid
+       AND carrid EQ pa_carid.
+
+   IF sy-subrc NE 0.
+     MESSAGE s001.
+     LEAVE LIST-PROCESSING.
+
+   ENDIF.
+
+ ENDFORM.
+ *&---------------------------------------------------------------------*
+ *& Form set_fcat_layout
+ *&---------------------------------------------------------------------*
+ *& text
+ *&---------------------------------------------------------------------*
+ *& -->  p1        text
+ *& <--  p2        text
+ *&---------------------------------------------------------------------*
+ FORM set_fcat_layout .
+
+ *variant
+   gs_variant-report = sy-repid.
+
+ *layout
+   gs_layout-zebra      = 'X'.
+   gs_layout-sel_mode   = 'D'.
+   gs_layout-cwidth_opt = 'D'.
+
+ *fcat_data setting
+
+   gs_fcat-fieldname = 'CARRID'.
+   gs_fcat-coltext   = 'ID'.
+   gs_fcat-key       = 'X'.
+
+   APPEND gs_fcat TO gt_fcat.
+   CLEAR : gs_fcat.
+
+   gs_fcat-fieldname = 'CONNID'.
+   gs_fcat-coltext   = 'NO.'.
+
+   APPEND gs_fcat TO gt_fcat.
+   CLEAR : gs_fcat.
+
+   gs_fcat-fieldname = 'FLDATE'.
+   gs_fcat-coltext   = 'DATE'.
+
+   APPEND gs_fcat TO gt_fcat.
+   CLEAR : gs_fcat.
+
+   gs_fcat-fieldname = 'PRICE'.
+   gs_fcat-cfieldname = 'CURRENCY'.
+   gs_fcat-coltext   = 'AIRFARE'.
+
+   APPEND gs_fcat TO gt_fcat.
+   CLEAR : gs_fcat.
+
+   gs_fcat-fieldname = 'CURRENCY'.
+   gs_fcat-coltext   = 'CURR.'.
+
+   APPEND gs_fcat TO gt_fcat.
+   CLEAR : gs_fcat.
+
+
+   gs_fcat-fieldname = 'PLANETYPE'.
+   gs_fcat-coltext   = 'PLANE'.
+
+   APPEND gs_fcat TO gt_fcat.
+   CLEAR : gs_fcat.
+
+
+
+
+ ENDFORM.
+ *&---------------------------------------------------------------------*
+ *& Form display_data
+ *&---------------------------------------------------------------------*
+ *& text
+ *&---------------------------------------------------------------------*
+ *& -->  p1        text
+ *& <--  p2        text
+ *&---------------------------------------------------------------------*
+ FORM display_data .
+   IF gcl_container IS INITIAL.
+
+     CREATE OBJECT gcl_container
+       EXPORTING
+         repid                       = sy-repid   " 시스템 id를 넣어주세요
+         dynnr                       = sy-dynnr   " 화면 번호를 넣어주세요
+         side                        = cl_gui_docking_container=>dock_at_bottom "어디서부터 이걸 떙겨줄꺼니? left면 왠쪽부터 extension의 값만큼.
+         extension                   = 3000.
+
+
+     "Container 생성
+ *    CREATE OBJECT gcl_container
+ *      EXPORTING
+ *        container_name = 'GCL_CONTAINER'.
+
+   ENDIF.
+
+
+   "ALV 생성"
+   IF gcl_alv_grid IS INITIAL.
+     CREATE OBJECT gcl_alv_grid
+       EXPORTING
+         i_parent = gcl_container.
+
+   ENDIF.
+
+   CALL METHOD gcl_alv_grid->set_table_for_first_display
+     EXPORTING
+       is_variant = gs_variant
+       i_save                        = 'A'
+       i_default                     = 'X'
+       is_layout                     = gs_layout
+   changing
+       it_outtab                     = gt_sflight
+       it_fieldcatalog               = gt_fcat.
+
+ ENDFORM.
+
+ *&---------------------------------------------------------------------*
+ *& Include          ZC5R070018_I01
+ *&---------------------------------------------------------------------*
+ *&---------------------------------------------------------------------*
+ *&      Module  USER_COMMAND_0101  INPUT
+ *&---------------------------------------------------------------------*
+ *       text
+ *----------------------------------------------------------------------*
+ MODULE user_command_0101 INPUT.
+
+ *  CASE gv_ucomm.
+ *    WHEN 'BACK' OR 'EXIT' OR 'CANC'.
+ *      CLEAR gv_ucomm.
+ *
+ *      LEAVE TO SCREEN 0.
+ *
+ *  ENDCASE.
+
+ ENDMODULE.
+ *&---------------------------------------------------------------------*
+ *&      Module  EXIT_0101  INPUT
+ *&---------------------------------------------------------------------*
+ *       text
+ *----------------------------------------------------------------------*
+ MODULE exit_0101 INPUT.
+
+
+ * grid 찢고 container 찢기.
+   call METHOD : gcl_alv_grid->free( ), gcl_container->free( ).
+
+
+ * 안에 있는 인스턴스 날리기
+   free        : gcl_alv_grid, gcl_container.
+
+   leave to SCREEN 0.
+
+ ENDMODULE.
+
+
+ *&---------------------------------------------------------------------*
+ *& Include          ZC5R070018_O01
+ *&---------------------------------------------------------------------*
+ *&---------------------------------------------------------------------*
+ *& Module STATUS_0101 OUTPUT
+ *&---------------------------------------------------------------------*
+ *&
+ *&---------------------------------------------------------------------*
+ MODULE status_0101 OUTPUT.
+   SET PF-STATUS 'S0101'.
+   SET TITLEBAR 'T0100'.
+
+
+ ENDMODULE.
+ *&---------------------------------------------------------------------*
+ *& Module SET_FCAT_LAYOUT OUTPUT
+ *&---------------------------------------------------------------------*
+ *&
+ *&---------------------------------------------------------------------*
+ MODULE set_fcat_layout OUTPUT.
+
+   IF gt_fcat is INITIAL.
+
+     PERFORM set_fcat_layout.
+
+   ENDIF.
+
+ ENDMODULE.
+ *&---------------------------------------------------------------------*
+ *& Module DISPLAY_DATA OUTPUT
+ *&---------------------------------------------------------------------*
+ *&
+ *&---------------------------------------------------------------------*
+ MODULE display_data OUTPUT.
+
+   PERFORM display_data.
+
+
+
+ ENDMODULE.
+
+
+ *&---------------------------------------------------------------------*
+ *& Include          ZC5R070018_S01
+ *&---------------------------------------------------------------------*
+ SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE Text-t01.
+   PARAMETERS pa_carid TYPE sflight-carrid OBLIGATORY.
+   select-OPTIONS so_conid for sflight-connid.
+ SELECTION-SCREEN END OF BLOCK bl1.
+ 
+ *&---------------------------------------------------------------------*
+ *& Include ZC5R070018_TOP                           - Report ZC5R070018
+ *&---------------------------------------------------------------------*
+ REPORT ZC5R070018 MESSAGE-ID zc507.
+ 
+ tables : sflight.
+ 
+ data : gs_sflight type sflight,
+        gt_sflight TYPE table of sflight.
+ 
+ *ALV Condition
+ *data : gcl_container TYPE REF TO cl_gui_custom_container,
+ data : gcl_container TYPE REF TO cl_gui_docking_container,
+        gcl_alv_grid  TYPE REF TO cl_gui_alv_grid,
+        gs_fcat       TYPE lvc_s_fcat,
+        gt_fcat       TYPE lvc_t_fcat,
+        gs_layout     TYPE lvc_s_layo,
+        gs_variant    TYPE disvariant.
+ 
+ DATA : gv_ucomm    TYPE sy-ucomm.

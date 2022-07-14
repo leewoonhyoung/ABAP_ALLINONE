@@ -1,0 +1,118 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      ZC5R070012
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE ZC5R070012_TOP                          .    " Global Data
+
+ INCLUDE ZC5R070012_S01                          .  " Selection-screen
+* INCLUDE ZC5R070012_O01                          .  " PBO-Modules
+* INCLUDE ZC5R070012_I01                          .  " PAI-Modules
+ INCLUDE ZC5R070012_F01                          .  " FORM-Routines
+
+ START-OF-SELECTION.
+ PERFORM get_Join_sf_sb.
+ perform display_data.
+
+ *&---------------------------------------------------------------------*
+ *& Include          ZC5R070012_F01
+ *&---------------------------------------------------------------------*
+ *&---------------------------------------------------------------------*
+ *& Form get_Join_sf_sb
+ *&---------------------------------------------------------------------*
+ *& text
+ *&---------------------------------------------------------------------*
+ *& -->  p1        text
+ *& <--  p2        text
+ *&---------------------------------------------------------------------*
+ FORM get_Join_sf_sb .
+
+ clear : gs_data.
+ refresh : gt_data.
+
+  select sf~carrid
+         sf~connid
+         sf~fldate
+         sf~planetype
+         sf~currency
+         sb~bookid
+         sb~customid
+         sb~custtype
+         sb~class
+         sb~agencynum
+
+  into CORRESPONDING FIELDS OF TABLE gt_data
+  FROM sflight as sf INNER JOIN sbook as sb
+    on sf~carrid     = sb~carrid
+    and sf~connid    = sb~connid
+    and sf~fldate    = sb~fldate
+  WHERE sf~carrid    = pa_carid
+    and sf~connid    in so_conid
+    and sf~planetype =   pa_planp
+    and sb~bookid    in so_bokid.
+
+
+  IF sy-subrc ne 0.
+    MESSAGE s000 WITH 'No Data in area' DISPLAY LIKE 'E'.
+
+    leave LIST-PROCESSING.
+
+
+  ENDIF.
+
+ ENDFORM.
+ *&---------------------------------------------------------------------*
+ *& Form display_data
+ *&---------------------------------------------------------------------*
+ *& text
+ *&---------------------------------------------------------------------*
+ *& -->  p1        text
+ *& <--  p2        text
+ *&---------------------------------------------------------------------*
+ FORM display_data .
+
+   cl_demo_output=>display( gt_data ).
+
+
+ ENDFORM.
+
+ *&---------------------------------------------------------------------*
+ *& Include          ZC5R070012_S01
+ *&---------------------------------------------------------------------*
+ SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+   PARAMETERS     : pa_carid  TYPE sflight-carrid OBLIGATORY.
+   SELECT-OPTIONS : so_conid  for sflight-connid OBLIGATORY.
+   PARAMETERS     : pa_planp TYPE sflight-planetype.
+   SELECT-OPTIONS : so_bokid  for sbook-bookid.
+
+ SELECTION-SCREEN END OF BLOCK bl1.
+
+ *&---------------------------------------------------------------------*
+ *& Include ZC5R070012_TOP                           - Module Pool      ZC5R070012
+ *&---------------------------------------------------------------------*
+ PROGRAM zc5r070012 MESSAGE-ID zc507.
+
+ TABLES : sflight, sbook.
+
+ DATA : BEGIN OF gs_data,
+          carrid    TYPE sflight-carrid,
+          connid    TYPE sflight-connid,
+          fldate    TYPE sflight-fldate,
+          planetype TYPE sflight-planetype,
+          currency  TYPE sflight-currency,
+          bookid    TYPE sbook-bookid,
+          customid  TYPE sbook-customid,
+          custtype  TYPE sbook-custtype,
+          class     TYPE sbook-class,
+          agencynum TYPE sbook-agencynum,
+
+        END OF gs_data,
+
+        gt_data LIKE TABLE OF gs_data.
+
+
+
+
+ 
+
