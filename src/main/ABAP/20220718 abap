@@ -1,0 +1,328 @@
+DATA : lt_sflight TYPE TABLE OF slfight,
+       lt_sbook   TYPE TABLE OF sbook.
+
+REFRESH : lt_sflight, lt_sbook.
+
+SELECT carrid connid fldate price currency planetype
+  INTO CORRESPONDING FIELDS OF TABLE lt_sflight
+  FROM sflight
+ WHERE carrid = 'AA'
+   AND connid = 17.
+
+*----------------------------------------------------------------------*
+* For All entries 사용하기 위한 선제조건
+* Sort 필수
+* 중복제거 필수  => adjacent duplicates from x  comparing y 이때 y는  sort에 순서랑 맞게 한다.
+* For all entries 할 itab 에 데이터 있는지 체크 필수
+*----------------------------------------------------------------------*
+
+SORT lt_sflight BY carrid connid fldate.
+
+delete ADJACENT DUPLICATES FROM lt_sflight COMPARING carrid connid fldate.
+
+*중복 제거에 사용할 itab 데이터 유무 체크
+IF lt_sflight is not INITIAL.
+
+  select carrid connid fldate bookid customid class
+    INTO CORRESPONDING FIELDS OF TABLE lt_sbook
+    from sbook
+    FOR ALL ENTRIES IN lt_sflight  "lt_sflight 의 모든 entry 에 대해 적용해주세요.
+   where carrid = lt_sflight-carrid
+     and connid = lt_sflight-connid
+     and fldate = lt_sflgiht-fldate
+     and custtype = 'P'.
+
+ENDIF.
+
+*---------------------------------
+*data를 넘기는 방법
+
+*method 1
+MOVE-CORRESPONDING lt_sflight to lt_temp.
+
+*method 2
+LOOP AT lt_sflight to lt_temp.
+
+  APPEND ls_temp to lt_temp.
+  clear ls_temp.
+
+ENDLOOP.
+
+*method 3
+append LINES OF lt_sflight to lt_temp. " lt_temp 에 lt_sflight data 복재.
+*---------------------------------
+
+TABLES : sflight, sbook.
+
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS : pa_carr TYPE sflight-carrid.
+  SELECT-OPTIONS : so_conn FOR sflight-connid,
+                   so_date FOR sflight-fldate,
+                   so_bid  FOR sbook-bookid,
+                   so_type FOR sbook-custtype.
+SELECTION-SCREEN END OF BLOCK bl1.
+
+
+DATA : BEGIN OF ls_data,
+         carrid     TYPE sflight-carrid,
+         connid     TYPE sflight-connid,
+         fldate     TYPE sflight-fldate,
+         planetype  TYPE sflight-planetype,
+         paymentsum TYPE sflight-paymentsum,
+         currency   TYPE sflight-currency,
+         bookid     TYPE sbook-bookid,
+         customid   TYPE sbook-customid,
+         custtype   TYPE sbook-custtype,
+       END OF ls_data,
+
+       lt_data    LIKE TABLE OF ls_data,
+       lt_sflight TYPE TABLE OF sflight,
+       lt_sbook   TYPE TABLE OF sbook.
+
+SELECT carrid connid fldate planetype paymentsum currency
+  INTO CORRESPONDING FIELDS OF TABLE lt_sflight
+  FROM sflight
+ WHERE carrid  = pa_carr
+   AND connid IN so_conn
+   AND fldate IN so_date.
+
+SORT lt_sflight BY carrid connid fldate.
+DELETE ADJACENT DUPLICATES FROM lt_sflight COMPARING carrid connid fldate.
+
+IF lt_sflight IS NOT INITIAL.
+
+  SELECT carrid connid fldate bookid customid custtype
+    INTO CORRESPONDING FIELDS OF TABLE lt_sbook
+    FROM sbook
+     FOR ALL ENTRIES IN lt_sflight
+   WHERE carrid    = lt_sflight-carrid
+     AND connid    = lt_sflight-connid
+     AND fldate    = lt_sflight-fldate
+     AND bookid   IN so_bid
+     AND custtype IN so_type.
+
+ENDIF.
+
+
+LOOP AT lt_sbook into ls_sbook.
+
+  MOVE-CORRESPONDING ls_book to ls_data.
+
+  READ TABLE lt_sflight into ls_sflight
+  with key carrid = ls_data-carrid
+           connid = ls_data-connid
+           fldate = ls_data-fldate
+  BINARY SEARCH.
+
+
+*정보 setter sflight
+  IF sy-subrc eq 0.
+    ls_data-planetype   = ls_sflight-planetype.
+    ls_data-paymentsum  = ls_sflight-paymentsum.
+    ls_data-currency    = ls_sflight-currency.
+  ENDIF.
+
+    Append ls_data to lt_data.
+    clear ls_data.
+
+ENDLOOP.
+
+*...FORM get_mara_data . " 주 DATA에서 가져온다.
+
+      CLEAR   : GS_DATA.
+      REFRESH : GT_DATA.
+
+      SELECT MATNR MTART MATKL
+        INTO  CORRESPONDING FIELDS OF TABLE GT_DATA
+        FROM  MARA
+        WHERE MATNR IN SO_MATNR
+          AND MTART IN SO_MTART.
+
+
+        IF SY-SUBRC EQ 0.
+          MESSAGE S001.
+          LEAVE LIST-PROCESSING.
+
+        ENDIF.
+
+    ENDFORM.
+    *&---------------------------------------------------------------------*
+    *& Form jOIN_MARA_MAKT
+    *&---------------------------------------------------------------------*
+    *& text
+    *&---------------------------------------------------------------------*
+    *& -->  p1        text
+    *& <--  p2        text
+    *&---------------------------------------------------------------------*
+    FORM jOIN_DATA_MAKT .
+
+      DATA : LS_MAKT TYPE MAKT,
+             LT_MAKT LIKE TABLE OF LS_MAKT,
+             LS_MARC TYPE MARC,
+             LT_MARC LIKE TABLE OF LS_MARC,
+             LV_TABIX TYPE SY-TABIX.
+
+      CLEAR   : LS_MAKT, LS_MARC.
+      REFRESH : LT_MAKT, LT_MARC.
+
+        SORT GT_DATA BY MATNR.
+        DELETE ADJACENT DUPLICATES FROM GT_DATA COMPARING MATNR.
+
+        IF GT_DATA IS NOT INITIAL.
+
+          SELECT MATNR MAKTX
+            INTO  CORRESPONDING FIELDS OF TABLE LT_MAKT
+            FROM  MAKT
+            FOR ALL ENTRIES IN GT_DATA
+            WHERE MATNR = GT_DATA-MATNR
+              AND SPRAS = SY-LANGU.
+
+        ENDIF.
+
+    ENDFORM.
+    *&---------------------------------------------------------------------*
+    *& Form JOIN_MARA_MARC
+    *&---------------------------------------------------------------------*
+    *& text
+    *&---------------------------------------------------------------------*
+    *& -->  p1        text
+    *& <--  p2        text
+    *&---------------------------------------------------------------------*
+    FORM JOIN_DATA_MARC .
+
+        DATA : LS_MAKT TYPE MAKT,
+             LT_MAKT LIKE TABLE OF LS_MAKT,
+             LS_MARC TYPE MARC,
+             LT_MARC LIKE TABLE OF LS_MARC,
+             LV_TABIX TYPE SY-TABIX.
+
+      CLEAR   : LS_MAKT, LS_MARC.
+      REFRESH : LT_MAKT, LT_MARC.
+
+      SELECT MATNR EKGRP DISPO
+        INTO CORRESPONDING FIELDS OF TABLE LT_MARC
+        FROM MARC
+        FOR ALL ENTRIES IN GT_DATA
+        WHERE MATNR = GT_DATA-MATNR
+        AND WERKS = PA_WERKS.
+
+
+    ENDFORM.
+    *&---------------------------------------------------------------------*
+    *& Form MERGE_LS_DATA
+    *&---------------------------------------------------------------------*
+    *& text
+    *&---------------------------------------------------------------------*
+    *& -->  p1        text
+    *& <--  p2        text
+    *&---------------------------------------------------------------------*
+    FORM merge_ls_data .
+          DATA : LS_MAKT TYPE MAKT,
+             LT_MAKT LIKE TABLE OF LS_MAKT,
+             LS_MARC TYPE MARC,
+             LT_MARC LIKE TABLE OF LS_MARC,
+             LV_TABIX TYPE SY-TABIX.
+
+      CLEAR   : LS_MAKT, LS_MARC.
+      REFRESH : LT_MAKT, LT_MARC.
+
+      SORT : LT_MAKT BY MATNR,
+             LT_MARC BY MATNR.
+
+      LOOP AT GT_DATA INTO GS_DATA.
+
+        LV_TABIX = SY-TABIX.
+
+        READ TABLE LT_MAKT INTO LS_MAKT
+        WITH KEY MATNR = GS_DATA-MATNR
+        BINARY SEARCH.
+
+        IF SY-SUBRC EQ 0.
+          GS_DATA-MAKTX = LS_MAKT-MAKTX.
+
+          MODIFY GT_DATA FROM GS_DATA INDEX LV_TABIX
+          TRANSPORTING MAKTX.
+        ENDIF.
+
+        READ TABLE LT_MARC INTO LS_MARC
+        WITH KEY MATNR = GS_DATA-MATNR
+        BINARY SEARCH.
+
+        IF SY-SUBRC EQ 0.
+          GS_DATA-EKGRP = LS_MARC-EKGRP.
+          GS_DATA-DISPO = LS_MARC-DISPO.
+
+          MODIFY GT_DATA FROM GS_DATA INDEX LV_TABIX
+          TRANSPORTING EKGRP DISPO.
+
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDFORM.
+
+--------------------------------------------
+FUNCTION zc5fc07_002.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     REFERENCE(PI_BUSPARTNUM) TYPE  SBUSPART-BUSPARTNUM
+*"     REFERENCE(PI_TYPE) TYPE  SBUSPART-BUSPATYP
+*"  EXPORTING
+*"     REFERENCE(PE_CODE) TYPE  CHAR1
+*"     REFERENCE(PE_MSG) TYPE  CHAR200
+*"  TABLES
+*"      PT_LIST STRUCTURE  SBUSPART
+*"----------------------------------------------------------------------
+  CLEAR   pt_list.
+  REFRESH pt_list.
+
+
+  SELECT buspartnum contact contphono buspatyp
+    INTO  CORRESPONDING FIELDS OF TABLE pt_list
+    FROM  sbuspart
+    WHERE buspartnum = pi_buspartnum
+      AND buspatyp   = pi_type.
+
+  IF sy-subrc NE 0.
+    pe_code = 'E'.
+    pe_msg  = 'Data not found'.
+  ELSE.
+    pe_code = 'S'.
+  ENDIF.
+
+ENDFUNCTION.
+--------------------------------------------
+FORM get_data .
+
+DATA : LV_TYPE TYPE SBUSPART-buspatyp,
+       lt_data TYPE table of sbuspart,
+       lv_code(1), lv_msg(200).
+
+    CASE 'X'.
+      WHEN pa_ta.
+        LV_TYPE = 'TA'.
+
+      WHEN PA_FC.
+        LV_TYPE = 'FC'.
+
+    ENDCASE.
+
+    CALL FUNCTION 'ZC5FC07_002'
+      EXPORTING
+        pi_buspartnum       = pa_busnm
+        pi_type             = LV_TYPE
+     IMPORTING
+       PE_CODE             =  lv_code
+       PE_MSG              =  lv_msg
+      TABLES
+        pt_list             = lt_data.
+
+
+
+cl_demo_output=>display( lt_data ).
+
+
+
+
+ENDFORM.
