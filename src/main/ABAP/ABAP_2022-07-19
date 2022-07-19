@@ -1,0 +1,339 @@
+*&---------------------------------------------------------------------*
+*& Form MATNR_F4
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM matnr_f4 .
+
+  DATA : BEGIN OF ls_value,
+           matnr TYPE mara-matnr,
+           maktx TYPE makt-maktx,
+           mtart TYPE mara-mtart,
+           meins TYPE mara-meins,
+           vpsta TYPE mara-vpsta,
+           pstat TYPE   mara-pstat,
+         END OF ls_value,
+
+         lt_value LIKE TABLE OF ls_value.
+
+
+  CLEAR   : ls_value.
+  REFRESH : lt_value.
+
+  SELECT a~matnr a~mtart a~meins a~vpsta a~pstat
+         b~maktx
+    INTO CORRESPONDING FIELDS OF TABLE lt_value
+    FROM mara AS a
+    LEFT OUTER JOIN makt AS b
+      ON a~matnr = b~matnr
+     AND b~spras = sy-langu.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+*     DDIC_STRUCTURE  = ' '
+      retfield        = 'MATNR'        " 던져주는 FIELD명
+*     PVALKEY         = ' '
+      dynpprog        = sy-repid
+      dynpnr          = sy-dynnr
+      dynprofield     = 'SO_MATNR_LOW' " 화면 어디 FIELD 에다 SETTING을 할건지 == 앞에 VALUE-REQUEST FOR '요기요'
+*     STEPL           = 0
+      window_title    = 'MATERIAL LIST'
+*     VALUE           = ' '
+      value_org       = 'S'
+*     MULTIPLE_CHOICE = ' '
+*     DISPLAY         = ' '
+*     CALLBACK_PROGRAM       = ' '
+*     CALLBACK_FORM   = ' '
+*     CALLBACK_METHOD =
+*     MARK_TAB        =
+* IMPORTING
+*     USER_RESET      =
+    TABLES
+      value_tab       = lt_value
+*     FIELD_TAB       =
+*     RETURN_TAB      =
+*     DYNPFLD_MAPPING =
+    EXCEPTIONS
+      parameter_error = 1
+      no_values_found = 2
+      OTHERS          = 3.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form MATNR_F4 튜닝
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM matnr_f4  USING PV_POSITION.
+
+  DATA : BEGIN OF ls_value,
+           matnr TYPE mara-matnr,
+           maktx TYPE makt-maktx,
+           mtart TYPE mara-mtart,
+           meins TYPE mara-meins,
+           vpsta TYPE mara-vpsta,
+           pstat TYPE   mara-pstat,
+         END OF ls_value,
+
+         lt_value LIKE TABLE OF ls_value.
+
+
+  CLEAR   : ls_value.
+  REFRESH : lt_value.
+
+  SELECT a~matnr a~mtart a~meins a~vpsta a~pstat
+         b~maktx
+    INTO CORRESPONDING FIELDS OF TABLE lt_value
+    FROM mara AS a
+    LEFT OUTER JOIN makt AS b
+      ON a~matnr = b~matnr
+     AND b~spras = sy-langu.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+*     DDIC_STRUCTURE  = ' '
+      retfield        = 'MATNR'        " 던져주는 FIELD명
+*     PVALKEY         = ' '
+      dynpprog        = sy-repid
+      dynpnr          = sy-dynnr
+      dynprofield     = PV_POSITION " 화면 어디 FIELD 에다 SETTING을 할건지 == 앞에 VALUE-REQUEST FOR '요기요'
+*     STEPL           = 0
+      window_title    = 'MATERIAL LIST'
+*     VALUE           = ' '
+      value_org       = 'S'
+*     MULTIPLE_CHOICE = ' '
+*     DISPLAY         = ' '
+*     CALLBACK_PROGRAM       = ' '
+*     CALLBACK_FORM   = ' '
+*     CALLBACK_METHOD =
+*     MARK_TAB        =
+* IMPORTING
+*     USER_RESET      =
+    TABLES
+      value_tab       = lt_value
+*     FIELD_TAB       =
+*     RETURN_TAB      =
+*     DYNPFLD_MAPPING =
+    EXCEPTIONS
+      parameter_error = 1
+      no_values_found = 2
+      OTHERS          = 3.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+
+ENDFORM.
+
+
+*&---------------------------------------------------------------------*
+*& Include          ZC5R070028_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form init_param
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM init_param .
+
+  pa_bukrs = '1010'.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat_layout
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat_layout .
+
+  gs_variant-report = sy-repid. "variant 변형 : 사용자가 grid display 형식을 관리
+
+  gs_layout-zebra      = 'X'.      "like CSS 기능 grid의 Display 형태를 지정
+  gs_layout-sel_mode   = 'D'.     " like CSS 기능 Mode 엔 'A' B' 'C' 'D' 가 존재한다 입맛에 맞게 골라라
+  gs_layout-cwidth_opt = 'X'.     "칼럼 폭을 자동으로 맞게 조절
+
+
+  PERFORM SET_fcat  USING :
+        'X'  'BELNR'      ' '    'BSEG'   'BELNR'      ' ',
+        ' '  'BUZEI'      ' '    'BSEG'   'BUZEI'      ' ',
+        ' '  'BLART'      ' '    'BKPF'   'BLART'      ' ',
+        ' '  'BUDAT'      ' '    'BKPF'   'BUDAT'      ' ',
+        ' '  'SHKZG'      ' '    'BSEG'   'SHKZG'      ' ',
+        ' '  'DMBTR'      ' '    'BSEG'   'DMBTR'      ' ',
+        ' '  'WAERS'      ' '    'BKPF'   'WAERS'      ' ',
+        ' '  'HKONT'      ' '    'BSEG'   'HKONT'      ' '.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_fcat
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+FORM SET_fcat  USING  pv_key PV_fieldname PV_coltext PV_ref_table PV_ref_field pv_edit.
+
+  gs_fcat-key       = pv_key.
+  gs_fcat-fieldname = pv_fieldname.
+  gs_fcat-coltext   = pv_coltext.
+  gs_fcat-ref_table = pv_ref_table.
+  gs_fcat-ref_field = pv_ref_field.
+  gs_fcat-edit      = pv_edit.
+
+
+  CASE PV_fieldname.
+    WHEN 'DMBTR'.
+      gs_fcat-cfieldname = 'WAERS'.
+
+     when 'BELNR'.
+       gs_fcat-hotspot = 'X'.
+  ENDCASE.
+
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR  gs_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Module DISPLAY_DATA OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE display_data OUTPUT.
+  PERFORM display_data.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Form display_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_data .
+
+  IF gcl_container IS INITIAL.
+
+    CREATE OBJECT gcl_container
+      EXPORTING
+        repid     = sy-repid   " 시스템 id를 넣어주세요
+        dynnr     = sy-dynnr   " 화면 번호를 넣어주세요
+        side      = cl_gui_docking_container=>dock_at_bottom "어디서부터 이걸 떙겨줄꺼니? left면 왠쪽부터 extension의 값만큼.
+        extension = 3000.
+
+  ENDIF.
+
+  "ALV 생성"
+  IF gcl_alv_grid IS INITIAL.
+    CREATE OBJECT gcl_alv_grid
+      EXPORTING
+        i_parent = gcl_container.
+
+
+    CREATE OBJECT gcl_handLer.
+
+    SET HANDLER : gcl_handler->handle_hotspot_click FOR gcl_alv_grid.
+
+  ENDIF.
+
+  CALL METHOD gcl_alv_grid->set_table_for_first_display
+    EXPORTING
+      is_variant      = gs_variant
+      i_save          = 'A'
+      i_default       = 'X'
+      is_layout       = gs_layout
+    CHANGING
+      it_outtab       = gt_data
+      it_fieldcatalog = gt_fcat.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_sort
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_sort .
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form GET_DATA
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+
+
+  SELECT  a~blart a~budat a~waers
+          b~belnr b~buzei b~shkzg b~dmbtr b~hkont
+
+    INTO CORRESPONDING FIELDS OF TABLE gt_data
+    FROM bkpf AS a
+         INNER JOIN bseg AS b
+            ON a~bukrs = b~bukrs
+           AND a~belnr = b~belnr
+           AND a~gjahr = b~gjahr
+    WHERE a~bukrs =  pa_bukrs
+      AND a~gjahr =  pa_gjahr
+      AND a~belnr IN so_belnr
+      AND a~blart IN so_blart.
+
+
+  IF sy-subrc NE 0.
+    MESSAGE s001.
+    LEAVE LIST-PROCESSING.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form handle_hotspot_click
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> E_COLUMN
+*&      --> E_ROW
+*&---------------------------------------------------------------------*
+FORM handle_hotspot_click  USING    ps_column TYPE lvc_s_col
+                                    ps_row    TYPE lvc_s_row.
+
+
+  IF sy-subrc EQ 0.
+    READ TABLE gt_data INTO  gs_data INDEX ps_row-index.
+
+    SET PARAMETER ID : 'BLN' FIELD gs_data-belnr, "documnet number
+                       'BUK' FIELD pa_bukrs, "Company code
+                       'GJR' FIELD pa_gjahr.   "Fiscal Year
+
+    CALL TRANSACTION  'FB03' AND SKIP FIRST SCREEN.
+
+  ENDIF.
+
+ENDFORM.
