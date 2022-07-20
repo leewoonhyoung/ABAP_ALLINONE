@@ -1,0 +1,527 @@
+
+FORM save_data .
+
+*  1. 해당 테이블에 데이터를 저장하기 위해서는 해당 테이블과 동일한 구조를 가진 itab 이 있어야한다.
+
+  DATA : lt_save TYPE TABLE OF zc5t07005,
+         ls_save LIKE LINE  OF lt_save.
+
+
+
+  CLEAR   : ls_save.
+  REFRESH : lt_save.
+
+* ALV 내의 data를 itab 에 반영
+  CALL METHOD gcl_alv_grid->check_changed_data.
+*  IMPORTING
+*    e_valid=
+
+  LOOP AT gt_data INTO gs_data.
+    IF gs_data-matnr IS INITIAL.
+      CONTINUE.
+
+    ENDIF.
+
+    MOVE-CORRESPONDING gs_data TO ls_save.
+    APPEND ls_save TO lt_save.
+    CLEAR : ls_save.
+
+  ENDLOOP.
+
+  IF lt_save IS NOT INITIAL.
+
+    MODIFY zc5t07005 FROM TABLE lt_save.
+
+    IF  sy-dbcnt > 0.
+      COMMIT WORK AND WAIT.
+      MESSAGE s003.
+
+    ELSE.
+      ROLLBACK WORK.
+    ENDIF.
+
+  ELSE.
+    MESSAGE s000 WITH TEXT-m01 DISPLAY LIKE 'W'.
+
+  ENDIF.
+
+
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Form delete_row
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM delete_row .
+
+  DATA : lv_cnt   TYPE i,
+         lv_tabix TYPE sy-tabix,
+         lv_add   TYPE i.
+
+  CLEAR   : lv_cnt, gs_row.
+  REFRESH : gt_rows.
+
+  CALL METHOD gcl_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  lv_cnt = lines( gt_rows ).
+
+  IF lv_cnt IS INITIAL.
+    MESSAGE s000 WITH TEXT-m02 DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+* 선택된 행의 번호를 받아와서 선택된 행에 'X' 표시
+*  LOOP AT gt_rows INTO gs_row.
+*
+*    READ TABLE gt_data INTO gs_data INDEX gs_row-index.
+*
+*    gs_data-mark = 'X'.
+*
+*    MODIFY gt_data FROM gs_data INDEX gs_row-index
+*    TRANSPORTING mark.
+*
+*  ENDLOOP.
+*
+** 'X' 표시된 행을 삭제
+*  DELETE gt_data WHERE mark EQ 'X'.
+  LOOP AT  gt_rows INTO gs_row.
+
+    lv_tabix = gs_row-index - lv_add .
+
+    DELETE gt_data INDEX lv_tabix.
+
+    lv_add += 1 .
+
+  ENDLOOP.
+
+
+  PERFORM refresh_grid.
+
+ENDFORM.
+
+*&---------------------------------------------------------------------*
+*& Report ZC5R070030
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE zc5r070030_top                          .    " Global Data
+
+INCLUDE zc5r070030_s01                          .  " PBO-Modules
+INCLUDE zc5r070030_c01                          .  " PBO-Modules
+INCLUDE zc5r070030_o01                          .  " PBO-Modules
+INCLUDE zc5r070030_i01                          .  " PAI-Modules
+INCLUDE zc5r070030_f01                          .  " FORM-Routines
+
+INITIALIZATION.
+  PERFORM init_param.
+
+
+START-OF-SELECTION.
+  PERFORM get_data.
+
+  call SCREEN '0100'.
+
+*&---------------------------------------------------------------------*
+*& Include ZC5R070030_TOP                           - Report ZC5R070030
+*&---------------------------------------------------------------------*
+REPORT zc5r070030 MESSAGE-ID zc507.
+
+TABLES : zc5t07007.
+
+
+DATA : BEGIN OF gs_data,
+         matnr TYPE zc5t07007-matnr,
+         werks TYPE zc5t07007-werks,
+         ekgrp TYPE zc5t07007-ekgrp,
+         dispo TYPE zc5t07007-dispo,
+         beskz TYPE zc5t07007-beskz,
+       END OF gs_data,
+
+       gt_data like TABLE OF gs_data.
+
+*ALV SETTING
+
+DATA : gcl_container TYPE REF TO cl_gui_docking_container,
+       gcl_alv_grid  TYPE REF TO cl_gui_alv_grid,
+       gs_fcat       TYPE        lvc_s_fcat,
+       gt_fcat       TYPE        lvc_t_fcat,
+       gs_layout     TYPE        lvc_s_layo,
+       gs_variant    TYPE        disvariant,
+       gs_stable     TYPE        lvc_s_stbl.
+
+DATA : gv_okcode      TYPE sy-ucomm,
+       gt_rows        TYPE lvc_t_row,
+       gs_row         TYPE lvc_s_row.
+
+*&---------------------------------------------------------------------*
+*& Include          ZC5R070030_S01
+*&---------------------------------------------------------------------*
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+  PARAMETERS     : pa_werks  TYPE zc5t07007-werks OBLIGATORY.
+  SELECT-OPTIONS : so_matnr  FOR  zc5t07007-matnr,
+                   so_ekgrp  FOR  zc5t07007-ekgrp.
+
+SELECTION-SCREEN END OF BLOCK bl1.
+
+*&---------------------------------------------------------------------*
+*& Include          ZC5R070030_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+ SET PF-STATUS 'S0100'.
+ SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_FCAT_LAYOUT OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_fcat_layout OUTPUT.
+  IF gs_layout IS INITIAL.
+    PERFORM SET_FCAT_LAYOUT.
+  ENDIF.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module DISPLAY_SCREEN OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE display_screen OUTPUT.
+ PERFORM display_screen.
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*& Include          ZC5R070030_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0100 INPUT.
+
+  CALL METHOD : gcl_alv_grid->free( ), gcl_container->free( ).
+
+  FREE        : gcl_alv_grid, gcl_container.
+
+  LEAVE TO SCREEN 0.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+
+
+  CASE gv_okcode.
+    WHEN  'SAVE'.
+      CLEAR : gv_okcode.
+      PERFORM save_data.
+
+    WHEN  'CREATE'.
+      CLEAR : gv_okcode.
+      PERFORM create_data.
+    WHEN  'DELETE'.
+      CLEAR : gv_okcode.
+      PERFORM delete_data.
+
+    WHEN  'REFRESH'.
+      CLEAR : gv_okcode.
+      PERFORM get_data.
+      PERFORM refresh_grid.
+
+  ENDCASE.
+
+ENDMODULE.
+
+*&---------------------------------------------------------------------*
+*& Include          ZC5R070030_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form init_param
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM init_param .
+
+  pa_werks = '1010'.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form get_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM get_data .
+
+  SELECT matnr
+         werks
+         ekgrp
+         dispo
+         beskz
+    INTO CORRESPONDING FIELDS OF TABLE gt_data
+    FROM zc5t07007
+    WHERE werks  = pa_werks
+      AND matnr IN so_matnr
+      AND ekgrp IN so_ekgrp.
+
+  IF sy-subrc EQ 0.
+    MESSAGE s001.
+    LEAVE LIST-PROCESSING.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form SET_FCAT_LAYOUT
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat_layout .
+
+  gs_layout-zebra      = 'X'. "줄
+  gs_layout-cwidth_opt = 'X'.  "너비 자동 조절
+  gs_layout-sel_mode   = 'D'.
+
+  PERFORM set_fcat USING :
+        'X'  'MATNR'  ' '  'ZC5T07007' 'MATNR' 'X',
+        'X'  'WERKS'  ' '  'ZC5T07007' 'WERKS' 'X',
+        ' '  'EKGRP'  ' '  'ZC5T07007' 'EKGRP' 'X',
+        ' '  'DISPO'  ' '  'ZC5T07007' 'DISPO' 'X',
+        ' '  'BESKZ'  ' '  'ZC5T07007' 'BESKZ' 'X'.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> P_
+*&      --> P_
+*&      --> P_
+*&      --> P_
+*&      --> P_
+*&      --> P_
+*&---------------------------------------------------------------------*
+FORM set_fcat  USING pv_key
+                     pv_field
+                     pv_text
+                     pv_ref_table
+                     pv_ref_field
+                     pv_edit.
+
+  gs_fcat-key        =  pv_key.
+  gs_fcat-fieldname  =  pv_field.
+  gs_fcat-coltext    =  pv_text.
+  gs_fcat-ref_table  =  pv_ref_table.
+  gs_fcat-ref_field  =  pv_ref_field.
+  gs_fcat-edit       =  pv_edit.
+
+  APPEND gs_fcat TO gt_fcat.
+  CLEAR : gs_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form display_screen
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM display_screen .
+  IF gcl_container IS NOT BOUND.
+
+    gs_variant-report = sy-repid.
+
+    CREATE OBJECT gcl_container
+      EXPORTING
+        repid     = sy-repid
+        dynnr     = sy-dynnr
+        side      = cl_gui_docking_container=>dock_at_left
+        extension = 3000.
+
+    CREATE OBJECT gcl_alv_grid
+      EXPORTING
+        i_parent = gcl_container.
+
+    CALL METHOD gcl_alv_grid->set_table_for_first_display
+      EXPORTING
+        is_variant      = gs_variant
+        i_save          = 'A'
+        i_default       = 'X'
+        is_layout       = gs_layout
+      CHANGING
+        it_outtab       = gt_data
+        it_fieldcatalog = gt_fcat.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form save_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM save_data .
+
+  DATA : lt_save TYPE TABLE OF zc5t07007,
+         ls_save LIKE LINE  OF lt_save.
+
+
+  CLEAR   : ls_save.
+  REFRESH : lt_save.
+
+   CALL METHOD gcl_alv_grid->check_changed_data.
+
+  LOOP AT gt_data INTO gs_data.
+    IF gs_data-matnr IS INITIAL.
+      CONTINUE.
+    ENDIF.
+
+    MOVE-CORRESPONDING gs_data TO ls_save.
+    APPEND ls_save TO lt_save.
+    CLEAR : ls_save.
+
+  ENDLOOP.
+
+  IF lt_save IS NOT INITIAL.
+
+    MODIFY zc5t07007 FROM TABLE lt_save.
+
+    IF  sy-dbcnt > 0.
+      MESSAGE s003.
+
+    ELSE.
+      ROLLBACK WORK.
+
+    ENDIF.
+  ELSE.
+    MESSAGE s000 WITH TEXT-m01 DISPLAY LIKE 'W'.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form create_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_data .
+
+  CLEAR : gs_data.
+
+  gs_data-werks = pa_werks.
+
+  APPEND gs_data TO gt_data.
+
+  PERFORM refresh_grid.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form refresh_grid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_grid .
+
+  gs_stable-row = 'X'.
+  gs_stable-col = 'X'.
+
+  CALL METHOD gcl_alv_grid->refresh_table_display
+    EXPORTING
+      is_stable      = gs_stable
+      i_soft_refresh = space.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form delete_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM delete_data .
+
+  DATA : lv_cnt TYPE i,
+         lv_tabix TYPE sy-tabix,
+         lv_calcu type sy-tabix.
+
+  CLEAR : lv_cnt.
+
+  CALL METHOD gcl_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  lv_cnt = lines( gt_rows ).
+
+
+  IF lv_cnt IS INITIAL.
+    MESSAGE s000 WITH TEXT-m02 DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+*  LOOP AT gt_rows INTO gs_row.
+*
+*    lv_tabix = gs_row-index - lv_calcu .
+*
+*    DELETE gt_data INDEX lv_tabix.
+*
+*    IF sy-subrc EQ 0.
+*
+*      lv_calcu += 1 .
+*
+*    ENDIF.
+*
+*  ENDLOOP.
+
+  sort gt_rows by index DESCENDING.
+
+  LOOP AT gt_rows into gs_row.
+
+    DELETE gt_data INDEX gs_row-index.
+
+  ENDLOOP.
+
+
+  PERFORM refresh_grid.
+
+ENDFORM.
