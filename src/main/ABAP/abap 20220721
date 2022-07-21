@@ -1,0 +1,223 @@
+  FORM delete_row .
+
+    DATA : lv_cnt   TYPE i,
+           lv_tabix TYPE sy-tabix,
+           lv_add   TYPE sy-tabix.
+
+    CLEAR   : lv_cnt, gs_row.
+    REFRESH : gt_rows.
+
+    CALL METHOD gcl_alv_grid->get_selected_rows
+      IMPORTING
+        et_index_rows = gt_rows.
+
+    lv_cnt = lines( gt_rows ).
+
+    IF lv_cnt IS INITIAL.
+      MESSAGE s000 WITH TEXT-m02 DISPLAY LIKE 'E'.
+      EXIT.
+    ENDIF.
+
+
+
+  SORT gt_rows BY index DESCENDING.
+  LOOP AT gt_rows INTO gs_row.
+    READ TABLE gt_data INTO gs_data INDEX gs_row-index.
+
+    IF sy-subrc EQ 0.
+      APPEND gs_data TO gt_data_del.
+      clear : gs_data.
+
+    ENDIF.
+
+    DELETE gt_data INDEX gs_row-index.
+
+
+  ENDLOOP.
+
+
+  PERFORM refresh_grid.
+
+ENDFORM.
+
+
+
+
+************************************************
+FORM save_data .
+
+  DATA : lt_save  TYPE TABLE OF zc5t07007,
+         ls_save  LIKE LINE  OF lt_save,
+         lt_del   TYPE TABLE OF zc5t07007,
+         ls_del   LIKE LINE  OF lt_del,
+         lv_dbcnt TYPE i.
+
+
+  CLEAR   : ls_save, ls_del, lv_dbcnt.
+  REFRESH : lt_save, lt_del.
+
+  CALL METHOD gcl_alv_grid->check_changed_data.
+
+  LOOP AT gt_data INTO gs_data.
+    IF gs_data-matnr IS INITIAL.
+      CONTINUE.
+    ENDIF.
+
+    " todo gs_data.count()
+    MOVE-CORRESPONDING gs_data TO ls_save.
+    APPEND ls_save TO lt_save.
+    CLEAR : ls_save.
+
+  ENDLOOP.
+
+
+  IF gt_data_del IS NOT INITIAL.
+    "삭제 대상 del 에 set.
+    LOOP AT gt_data_del INTO gs_data.
+
+      MOVE-CORRESPONDING gs_data TO ls_del.
+
+      APPEND ls_del TO lt_del.
+      CLEAR  ls_del.
+
+    ENDLOOP.
+
+" todo
+    DELETE zc5t07007 FROM TABLE lt_del.
+
+
+    IF sy-dbcnt > 0.
+      lv_dbcnt += sy-dbcnt.
+
+    ENDIF.
+
+  ENDIF.
+
+  IF lt_save IS NOT INITIAL.
+
+    MODIFY zc5t07007 FROM TABLE lt_save.
+
+    IF  sy-dbcnt > 0.
+
+      lv_dbcnt += sy-dbcnt.
+
+    ENDIF.
+
+  ELSE.
+    MESSAGE s000 WITH TEXT-m01 DISPLAY LIKE 'W'.
+
+  ENDIF.
+
+  IF lv_dbcnt > 0.
+    COMMIT WORK AND WAIT.
+    MESSAGE s003.
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form create_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM create_data .
+
+  CLEAR : gs_data.
+
+  gs_data-werks = pa_werks.
+
+  APPEND gs_data TO gt_data.
+
+  PERFORM refresh_grid.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form refresh_grid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM refresh_grid .
+
+  gs_stable-row = 'X'.
+  gs_stable-col = 'X'.
+
+  CALL METHOD gcl_alv_grid->refresh_table_display
+    EXPORTING
+      is_stable      = gs_stable
+      i_soft_refresh = space.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form delete_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM delete_data .
+
+  DATA : lv_cnt   TYPE i,
+         lv_tabix TYPE sy-tabix,
+         lv_calcu TYPE sy-tabix,
+         ls_del   TYPE zc5t07005.
+
+  CLEAR : lv_cnt.
+
+  CALL METHOD gcl_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+  lv_cnt = lines( gt_rows ).
+
+
+  IF lv_cnt IS INITIAL.
+    MESSAGE s000 WITH TEXT-m02 DISPLAY LIKE 'E'.
+    EXIT.
+  ENDIF.
+
+*  LOOP AT gt_rows INTO gs_row.
+*
+*    lv_tabix = gs_row-index - lv_calcu .
+*
+*    DELETE gt_data INDEX lv_tabix.
+*
+*    IF sy-subrc EQ 0.
+*
+*      lv_calcu += 1 .
+*
+*    ENDIF.
+*
+*  ENDLOOP.
+
+  SORT gt_rows BY index DESCENDING.
+
+  LOOP AT gt_rows INTO gs_row.
+
+    READ TABLE gt_data INTO gs_data INDEX gs_row-index.
+
+    IF sy-subrc EQ 0.
+      MOVE-CORRESPONDING gs_data TO ls_del.
+
+      APPEND ls_del TO gt_data_del.
+      CLEAR : ls_del.
+    ENDIF.
+
+    DELETE gt_data INDEX gs_row-index.
+
+  ENDLOOP.
+
+
+  PERFORM refresh_grid.
+
+ENDFORM.
+
+**********************************************************************
