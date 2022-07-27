@@ -1,0 +1,244 @@
+*&---------------------------------------------------------------------*
+*& Report ZC507R_SAMPLE_ITAB
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+REPORT zc507r_sample_itab.
+
+
+*DATA : BEGIN OF ls_data,
+*         num(5)   TYPE n,
+*         result(10),
+*       END OF ls_data,
+*
+*       lt_data LIKE TABLE OF ls_data.
+*ls_data-num = 1.
+*ls_data-result = 'ABCDEFG'.
+*APPEND ls_data TO lt_data.
+*
+*ls_data-num = 2.
+*ls_data-result = 'HIJKLMN'.
+*APPEND ls_data TO lt_data.
+*
+*ls_data-num = 3.
+*ls_data-result = 'OPQRSTU'.
+*APPEND ls_data TO lt_data.
+*
+*ls_data-num = 4.
+*ls_data-result = 'VWXYZ'.
+*APPEND ls_data TO lt_data.
+*
+*
+*
+**//pseoudo code.
+**
+**4번 반복.
+**인덱스 값이 같으면
+**index는 5로 result 는 ab로 변경해 주시고
+**index는 5로 result 는 ab로 변경해 주시고
+**index는 5로 result 는 ab로 변경해 주시고
+**index는 5로 result 는 ab로 변경해 주시고
+**index는 5로 result 는 ab로 변경해 주시고
+**
+**수정해주세요.
+*
+*
+*data : ls_data2  like ls_data,
+*       lt_data2  LIKE TABLE OF ls_data,
+*       lv_tabix  TYPE sy-tabix.
+*
+*clear : ls_data2, lv_tabix.
+*refresh : lt_data2.
+*
+*LOOP AT lt_data INTO ls_data.
+*
+*  lv_tabix = sy-tabix.
+*
+*  CASE ls_data-num.
+*    WHEN 1.
+*        ls_data2-num = 5.
+*        ls_data2-result = 'AA'.
+*        MODIFY lt_data2 FROM ls_data2 INDEX lv_tabix.
+*
+*    WHEN 2.
+*        ls_data2-num = 6.
+*        ls_data2-result = 'CD'.
+*        MODIFY lt_data2 FROM ls_data2 INDEX lv_tabix.
+*
+*    WHEN 3.
+*        ls_data2-num = 7.
+*        ls_data2-result = 'EF'.
+*        MODIFY lt_data2 FROM ls_data2 INDEX lv_tabix.
+*
+*    WHEN 4.
+*        ls_data2-num = 8.
+*        ls_data2-result = 'GH'.
+*        MODIFY lt_data2 FROM ls_data2 INDEX lv_tabix.
+*
+*  ENDCASE.
+*
+*ENDLOOP.
+*
+*cl_demo_output=>DISPLAY( LT_DATA2 ).
+
+**********************************************************************************
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE TEXT-t01.
+
+
+DATA : lv_carrid  TYPE sflight-carrid,
+       ls_sflight TYPE sflight.
+
+SELECT SINGLE carrid connid
+  INTO (lv_carrid, ls_sflight-connid)
+  FROM sflight
+  WHERE carrid = 'AA'.
+
+
+* new syntx 기존 변수 활용시
+SELECT carrid, connid
+  FROM sflight
+  WHERE carrid = @pa_carrid " where 조건에 오는  변수는 @를 넣어줘야한다. escape 문자.
+   INTO(@lv_carrid, @ls_sflight-connid).
+
+* new syntx : 변수 선언하면서 사용시.
+  SELECT SINGLE carrid, connid
+    FROM sflight
+    WHERE carrid = @pa_carr
+    INTO ( @DATA(lv_carrid2), @DATA(lv_connid)).
+**********************************************************************************
+* old syntax.
+
+  DATA : lv_connid_2 TYPE sflight-connid.
+
+  lv_connid_2 = lv_connid.
+
+*new syntx 변수 선언하면서 값 할당.
+  DATA(lv_connid_3) = lv_connid.
+**********************************************************************************
+
+  DATA : BEGIN OF ls_data,
+           carrid   TYPE sflight-carrid,
+           connid   TYPE sflight-connid,
+           fldate   TYPE sflight-fldate,
+           price    TYPE sflight-price,
+           currency TYPE sflight-currency,
+         END OF ls_data,
+
+         lt_data LIKE TABLE OF ls_data.
+
+
+  SELECT carrid connid fldate price currency
+    INTO CORRESPONDING FIELDS OF TABLE lt_data
+    FROM sflight
+    WHERE carrid = pa_carr.
+
+* Itab 선언 없이 데이터 받기
+  SELECT carrid, connid, fldate, price, currency
+    FROM sflight
+   WHERE carrid = @pa_carr
+    INTO TABLE @DATA(lt_data2). "꼭 into TABLE 이여야 한다.
+
+* structure 만들기 신문법.
+  LOOP AT lt_data2 INTO DATA(ls_data2).
+
+  ENDLOOP.
+
+*********************************************************************************
+  DATA : lt_data_tmp LIKE TABLE OF ls_data.
+
+  APPEND LINES OF lt_data TO lt_data_tmp.
+  MOVE-CORRESPONDING lt_data TO lt_data_tmp.
+  lt_data_tmp = lt_data.
+
+*itab 선언없이 itab의 데이터를 받기
+  DATA(lt_data_tmp2) = lt_data.
+
+*********************************************************************************
+
+  DATA : lt_list LIKE ls_data.
+
+  DATA(ls_list2) = ls_data.
+
+  TYPES : BEGIN OF lty_data,
+            carrid TYPE sflight-carrid,
+          END OF lty_data.
+
+  LOOP AT lt_data INTO ls_data.
+
+*  MOVE-CORRESPONDING ls_data to ls_list.
+    ls_list = CORRESPONDING #( ls_data ). " ls_data type을 맞춰서 ls_list로 맞춰라.
+
+  ENDLOOP.
+*********************************************************************************
+*old syntax
+  LOOP AT lt_data INTO ls_data.
+
+    ls_list-carrid = ls_data-carrid.
+    ls_list-connid = ls_data-connid.
+    ls_list-fldate = ls_data-fldate.
+    ls_list-price  = ls_data-price.
+
+  ENDLOOP.
+
+* new syntax
+
+*넣고 싶은 것만 넣고 나머지 field 들은 초기화 시킨다.
+* base 가 들어가면 초기화 시키지 않고 ls_list 상태를 남겨두고 carrid = ua connid 18인 것만 담아준다.
+  LOOP AT lt_data INTO ls_data.
+
+    ls_list = VALUE #( BASE ls_list
+                       carrid = 'UA'
+                       connid = 18 ).
+
+  ENDLOOP.
+*********************************************************************************
+  DATA : lt_data_tmp3 LIKE TABLE OF ls_data,
+         ls_data_tmp3 LIKE ls_data.
+
+*old syntax
+  LOOP AT lt_data INTO ls_data.
+
+    ls_data_tmp3-carrid = ls_data-carrid.
+    ls_data_tmp3-connid = ls_data-connid.
+
+
+    APPEND ls_data_tmp3 TO lt_data_tmp3.
+    CLEAR : ls_data_tmp3.
+
+
+  ENDLOOP.
+
+*new syntax => append 없이 데이터 적제.
+
+  LOOP AT lt_data INTO ls_data.
+
+    lt_data_tmp3 = VALUE #( BASE lt_data_tmp3
+                            (
+                             carrid = ls_data-carrid
+                             connid = ls_data-connid
+                             )
+                          ).
+
+  ENDLOOP.
+
+
+  REFRESH lt_data_tmp3.
+
+  lt_data_tmp3 = VALUE #(
+                          (
+                            carrid = 'UA'
+                            connid = 17
+                          )
+
+                          (
+                            carrid = 'UA'
+                            connid = 18
+                          )
+
+                          (
+                            carrid = 'UA'
+                            connid = 19
+                          )
+                        ).
+
+
