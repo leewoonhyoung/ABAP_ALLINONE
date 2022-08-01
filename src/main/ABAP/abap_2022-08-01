@@ -1,0 +1,152 @@
+REPORT zc5r070032 MESSAGE-ID zc507.
+
+
+class lcl_event_handler DEFINITION DEFERRED.
+
+
+TABLES  : zc5t07010.
+
+DATA : BEGIN OF gs_data,
+         status    TYPE icon_d,
+         group_id  TYPE zc5t07010-group_id,
+         group_txt TYPE zc5t07010-group_txt,
+         group_url TYPE zc5t07010-group_url,
+         erdat     TYPE zc5t07010-erdat,
+         erzet     TYPE zc5t07010-erzet,
+         ernam     TYPE zc5t07010-ernam,
+         aedat     TYPE zc5t07010-aedat,
+         aezet     TYPE zc5t07010-aezet,
+         aenam     TYPE zc5t07010-aenam,
+         celltab   TYPE lvc_t_styl,
+       END OF gs_data,
+
+       gt_data LIKE TABLE OF gs_data,
+       gt_data_del TYPE TABLE OF zc5t26007.
+
+* ALV 관련
+DATA : gcl_container TYPE REF TO cl_gui_docking_container,
+       gcl_alv_grid  TYPE REF TO cl_gui_alv_grid,
+       gcl_hanlder   TYPE REF TO lcl_event_handler,
+       gs_fcat       TYPE lvc_s_fcat,
+       gt_fcat       TYPE lvc_t_fcat,
+       gs_layout     TYPE lvc_s_layo,
+       gs_variant    TYPE disvariant,
+       gs_stable     TYPE lvc_s_stbl.
+
+
+DATA : gv_okcode TYPE sy-ucomm,
+       gt_rows   TYPE lvc_t_row,
+       gs_row    TYPE lvc_s_row.
+
+
+*&---------------------------------------------------------------------*
+*& Include          ZC5R070032_C01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Class lcl_event_handler
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+CLASS lcl_event_handler DEFINITION FINAL.
+  PUBLIC SECTION.
+
+    METHODS :
+      handle_data_change FOR EVENT data_changed OF cl_gui_alv_grid
+        IMPORTING
+          er_data_changed.
+
+ENDCLASS.
+*&---------------------------------------------------------------------*
+*& Class (Implementation) lcl_event_handler
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+CLASS lcl_event_handler IMPLEMENTATION.
+
+  METHOD handle_data_change.
+    PERFORM handle_data_change USING er_data_changed.
+ ENDMETHOD.
+ENDCLASS.
+
+*&---------------------------------------------------------------------*
+*& Form handle_data_change
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ER_DATA_CHANGED
+*&---------------------------------------------------------------------*
+FORM handle_data_change  USING pcl_data_changed TYPE REF TO cl_alv_changed_data_protocol.
+
+*  data : ls_modi TYPE lvc_s_modi.
+
+  LOOP AT pcl_data_changed->mt_good_cells INTO DATA(ls_modi).
+
+    "절대로 call method gcl_alv_grid->check_chagned_data 를 사용하지 말자."
+    "data_changed 이벤트 안에서 check_changed_data를 사용하게 되면 무한 루프에 돈다."
+
+  ENDLOOP.
+
+ENDFORM.
+
+FORM display_screen .
+
+  IF gcl_container IS NOT BOUND.
+
+    CREATE OBJECT gcl_container
+      EXPORTING
+        repid     = sy-repid
+        dynnr     = sy-dynnr
+        side      = cl_gui_docking_container=>dock_at_left
+        extension = 3000.
+
+    CREATE OBJECT gcl_alv_grid
+      EXPORTING
+        i_parent = gcl_container.
+
+    gs_variant-report = sy-repid.
+
+    IF gcl_hanlder IS NOT BOUND.
+      CREATE OBJECT gcl_hanlder.
+    ENDIF.
+
+    "Edit Event를 alv에 등록한다 change event 는 꼭 이부분이 필요하다.
+    CALL METHOD gcl_alv_grid->register_edit_event
+      EXPORTING
+        i_event_id = cl_gui_alv_grid=>mc_evt_modified.
+    """""""""""""""""""""""""""""""""""""""""""""""""""
+
+    SET HANDLER : gcl_hanlder->handle_data_change   FOR gcl_alv_grid,
+                  gcl_hanlder->handle_change_finish FOR gcl_alv_grid.
+
+    CALL METHOD gcl_alv_grid->set_table_for_first_display
+      EXPORTING
+        is_variant      = gs_variant
+        i_save          = 'A'
+        i_default       = 'X'
+        is_layout       = gs_layout
+      CHANGING
+        it_outtab       = gt_data
+        it_fieldcatalog = gt_fcat.
+
+  ENDIF.
+
+ENDFORM.
+
+IF lt_save IS NOT INITIAL.
+
+    MODIFY zc5t07010 FROM TABLE lt_save.
+
+    IF sy-dbcnt > 0.
+      MESSAGE s003.
+
+      LOOP AT gt_data INTO gs_data WHERE modified NE space.
+        CLEAR : gs_data-modified.
+
+        MODIFY gt_data FROM gs_data INDEX sy-tabix
+        TRANSPORTING modified.
+
+      ENDLOOP.
+      COMMIT WORK AND WAIT.
+    ENDIF.
+
+  ENDIF.
