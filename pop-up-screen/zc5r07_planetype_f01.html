@@ -1,0 +1,626 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="application/xhtml+xml; charset=ISO-8859-1" />
+<title>ZC5R07_PLANETYPE_F01</title>
+<style type="text/css">
+.code{ font-family:"Courier New", Courier, monospace; color:#000; font-size:14px; background-color:#F2F4F7 }
+  .codeComment {font-family:"Courier New", Courier, monospace; color:#0000F0; font-size:14px; background-color:#F2F4F7 }
+  .normalBold{ font-family:Arial, Helvetica, sans-serif; color:#000; font-size:12px; font-weight:800 }
+  .normalBoldLarge{ font-family:Arial, Helvetica, sans-serif; color:#000; font-size:16px; font-weight:800 }
+</style>
+<style type="text/css">
+  .normal{ font-family:Arial, Helvetica, sans-serif; color:#000; font-size:12px }
+  .footer{ font-family:Arial, Helvetica, sans-serif; color:#000; font-size:12px; text-align: center }
+  h2{ font-family:Arial, Helvetica, sans-serif; color:#000; font-size:16px; font-weight:800 }
+  h3{ font-family:Arial, Helvetica, sans-serif; color:#000; font-size:14px; font-weight:800 }
+  .outerTable{
+   background-color:#E0E7ED;
+   width:100%;
+   border-top-width: thin;
+   border-right-width: thin;
+   border-right-width: thin;
+   border-left-width: thin;
+   border-top-style: solid;
+   border-right-style: solid;
+   border-bottom-style: solid;
+   border-left-style: solid;
+  }
+  .innerTable{
+   background-color:#F2F4F7;
+   width:100%;
+   border-top-width: thin;
+   border-right-width: thin;
+   border-bottom-width: thin;
+   border-left-width: thin;
+   border-top-style: solid;
+   border-right-style: solid;
+   border-bottom-style: solid;
+   border-left-style: solid;
+  }
+</style>
+</head>
+<body>
+<table class="outerTable">
+  <tr class="normalBoldLarge">
+     <td><h2>Code listing for: ZC5R07_PLANETYPE_F01</h2>
+<h3> Description: Include ZC5R07_PLANETYPE_F01</h3></td>
+   </tr>
+  <tr>
+     <td>
+     <table class="innerTable">
+       <tr>
+          <td>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Include&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ZC5R07_PLANETYPE_F01<br />
+*&---------------------------------------------------------------------*<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;get_data<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM get_data .<br />
+<br />
+   </div>
+   <div class="codeComment">
+*&nbsp;&nbsp;DATA&nbsp;:&nbsp;lv_tabix&nbsp;TYPE&nbsp;sy-tabix,<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ls_style&nbsp;TYPE&nbsp;lvc_s_styl,<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lt_style&nbsp;TYPE&nbsp;lvc_t_styl.<br />
+<br />
+   </div>
+   <div class="code">
+&nbsp;&nbsp;CLEAR&nbsp;&nbsp;&nbsp;gs_data.<br />
+&nbsp;&nbsp;REFRESH&nbsp;gt_data.<br />
+<br />
+&nbsp;&nbsp;SELECT&nbsp;a~carrid&nbsp;a~carrname&nbsp;a~url<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b~connid&nbsp;b~fldate&nbsp;b~price&nbsp;b~currency&nbsp;b~planetype<br />
+&nbsp;&nbsp;&nbsp;&nbsp;INTO&nbsp;CORRESPONDING&nbsp;FIELDS&nbsp;OF&nbsp;TABLE&nbsp;gt_data<br />
+&nbsp;&nbsp;&nbsp;&nbsp;FROM&nbsp;scarr&nbsp;AS&nbsp;a<br />
+&nbsp;&nbsp;&nbsp;INNER&nbsp;JOIN&nbsp;sflight&nbsp;AS&nbsp;b<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ON&nbsp;a~carrid&nbsp;=&nbsp;b~carrid<br />
+&nbsp;&nbsp;&nbsp;WHERE&nbsp;b~connid&nbsp;&nbsp;&nbsp;&nbsp;IN&nbsp;so_conid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND&nbsp;b~planetype&nbsp;IN&nbsp;so_plntp<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND&nbsp;a~carrid&nbsp;&nbsp;&nbsp;&nbsp;IN&nbsp;so_carid.<br />
+<br />
+&nbsp;&nbsp;IF&nbsp;sy-subrc&nbsp;NE&nbsp;0.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;MESSAGE&nbsp;s001.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;LEAVE&nbsp;LIST-PROCESSING.<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;gs_fcat_layout<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM gs_fcat_layout .<br />
+<br />
+&nbsp;&nbsp;gs_layout-zebra&nbsp;=&nbsp;'X'.<br />
+&nbsp;&nbsp;gs_layout-sel_mode&nbsp;=&nbsp;'D'.<br />
+&nbsp;&nbsp;gs_layout-cwidth_opt&nbsp;=&nbsp;'X'.<br />
+<br />
+&nbsp;&nbsp;PERFORM&nbsp;set_fcat&nbsp;USING&nbsp;:<br />
+&nbsp;&nbsp;'X'&nbsp;&nbsp;&nbsp;'CARRID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SCARR'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'CARRID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CARRNAME'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SCARR'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'CARRNAME'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CONNID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SFLIGHT'&nbsp;&nbsp;&nbsp;'CONNID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'FLDATE'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SFLIGHT'&nbsp;&nbsp;&nbsp;'FLDATE'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PLANETYPE'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SFLIGHT'&nbsp;&nbsp;&nbsp;'PLANETYPE'&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PRICE'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SFLIGHT'&nbsp;&nbsp;&nbsp;'PRICE'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CURRENCY'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SFLIGHT'&nbsp;&nbsp;&nbsp;'CURRENCY'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'URL'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'SCARR'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'URL'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'.<br />
+<br />
+<br />
+<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;set_fcat<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM set_fcat  USING pv_key<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pv_field<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pv_text<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pv_ref_table<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pv_ref_field<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pv_edit.<br />
+<br />
+&nbsp;&nbsp;gs_fcat-key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;pv_key.<br />
+&nbsp;&nbsp;gs_fcat-fieldname&nbsp;=&nbsp;pv_field.<br />
+&nbsp;&nbsp;gs_fcat-coltext&nbsp;&nbsp;&nbsp;=&nbsp;pv_text.<br />
+&nbsp;&nbsp;gs_fcat-ref_table&nbsp;=&nbsp;pv_ref_table.<br />
+&nbsp;&nbsp;gs_fcat-ref_field&nbsp;=&nbsp;pv_ref_field.<br />
+&nbsp;&nbsp;gs_fcat-edit&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;pv_edit.<br />
+<br />
+<br />
+&nbsp;&nbsp;CASE&nbsp;pv_field.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHEN&nbsp;'PRICE'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gs_fcat-cfieldname&nbsp;=&nbsp;'CURUENCY'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHEN&nbsp;'PLANETYPE'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gs_fcat-hotspot&nbsp;=&nbsp;'X'.<br />
+&nbsp;&nbsp;ENDCASE.<br />
+<br />
+&nbsp;&nbsp;APPEND&nbsp;gs_fcat&nbsp;TO&nbsp;gt_fcat.<br />
+&nbsp;&nbsp;CLEAR&nbsp;:&nbsp;gs_fcat.<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;display_screen<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM display_screen .<br />
+&nbsp;&nbsp;IF&nbsp;gcl_container&nbsp;IS&nbsp;NOT&nbsp;BOUND.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_container<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;repid&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;sy-repid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dynnr&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;sy-dynnr<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;side&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;cl_gui_docking_container=&gt;dock_at_left<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;extension&nbsp;=&nbsp;3000.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_alv_grid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_parent&nbsp;=&nbsp;gcl_container.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;gs_variant-report&nbsp;=&nbsp;sy-repid.<br />
+<br />
+" Handler"<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_handler.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;SET&nbsp;HANDLER&nbsp;:&nbsp;gcl_handler-&gt;handle_hotspot_click&nbsp;FOR&nbsp;gcl_alv_grid.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;SET&nbsp;HANDLER&nbsp;:&nbsp;gcl_handler-&gt;handle_double_click&nbsp;FOR&nbsp;gcl_alv_grid.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CALL&nbsp;METHOD&nbsp;gcl_alv_grid-&gt;set_table_for_first_display<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is_variant&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gs_variant<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_save&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'A'<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_default&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'X'<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is_layout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gs_layout<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHANGING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;it_outtab&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gt_data<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;it_fieldcatalog&nbsp;=&nbsp;gt_fcat.<br />
+<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;handle_double_click<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;E_COLUMN<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;E_ROW<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM handle_hotspot_click  USING  ps_column TYPE lvc_s_col<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ps_row&nbsp;&nbsp;&nbsp;&nbsp;TYPE&nbsp;lvc_s_row.<br />
+&nbsp;&nbsp;IF&nbsp;sy-subrc&nbsp;EQ&nbsp;0.<br />
+   </div>
+   <div class="codeComment">
+*&nbsp;&nbsp;&nbsp;MESSAGE&nbsp;i000&nbsp;WITH&nbsp;ps_column-fieldname&nbsp;ps_row-index.<br />
+   </div>
+   <div class="code">
+&nbsp;&nbsp;&nbsp;&nbsp;READ&nbsp;TABLE&nbsp;gt_data&nbsp;INTO&nbsp;&nbsp;gs_data&nbsp;INDEX&nbsp;ps_row-index.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CASE&nbsp;ps_column-fieldname.&nbsp;"###&nbsp;###&nbsp;field##&nbsp;###&nbsp;####&nbsp;##&nbsp;##.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;WHEN&nbsp;'PLANETYPE'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PERFORM&nbsp;get_saplane_data&nbsp;USING&nbsp;gs_data-planetype.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;ENDCASE.<br />
+<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;get_saplane_data<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;GS_DATA_PLANETYPE<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM get_saplane_data  USING  pv_planetype.<br />
+<br />
+&nbsp;&nbsp;CLEAR&nbsp;&nbsp;&nbsp;:&nbsp;gs_saplane.<br />
+&nbsp;&nbsp;REFRESH&nbsp;:&nbsp;gt_saplane.<br />
+<br />
+&nbsp;&nbsp;SELECT&nbsp;planetype&nbsp;seatsmax&nbsp;consum&nbsp;con_unit<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tankcap&nbsp;cap_unit&nbsp;weight&nbsp;wei_unit&nbsp;span&nbsp;span_unit&nbsp;leng<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;leng_unit&nbsp;op_speed&nbsp;speed_unit&nbsp;producer&nbsp;seatsmax_b&nbsp;seatsmax_f<br />
+&nbsp;&nbsp;&nbsp;&nbsp;INTO&nbsp;CORRESPONDING&nbsp;FIELDS&nbsp;OF&nbsp;TABLE&nbsp;gt_saplane<br />
+&nbsp;&nbsp;&nbsp;&nbsp;FROM&nbsp;saplane<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHERE&nbsp;planetype&nbsp;=&nbsp;pv_planetype.<br />
+<br />
+&nbsp;&nbsp;IF&nbsp;sy-subrc&nbsp;NE&nbsp;0.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;MESSAGE&nbsp;s000&nbsp;WITH&nbsp;TEXT-m01&nbsp;DISPLAY&nbsp;LIKE&nbsp;'E'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;EXIT.&nbsp;"stop&nbsp;##&nbsp;leave&nbsp;list&nbsp;processing&nbsp;####&nbsp;exit&nbsp;####.&nbsp;&nbsp;&nbsp;exit&nbsp;#&nbsp;if&nbsp;##&nbsp;#####&nbsp;##&nbsp;####.<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+&nbsp;&nbsp;CALL&nbsp;SCREEN&nbsp;'0101'&nbsp;STARTING&nbsp;AT&nbsp;20&nbsp;3.<br />
+<br />
+<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;get_sbook_data<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;GS_DATA_CARRID<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;GS_DATA_CONNID<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;GS_DATA_FLDATE<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM get_sbook_data  USING    p_gs_data_carrid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p_gs_data_connid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;p_gs_data_fldate.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;gt_fcat_layout_pop<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM gt_fcat_layout_pop .<br />
+<br />
+&nbsp;&nbsp;gs_layout_pop-zebra&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'X'.<br />
+&nbsp;&nbsp;gs_layout_pop-sel_mode&nbsp;&nbsp;&nbsp;=&nbsp;'D'.<br />
+&nbsp;&nbsp;gs_layout_pop-cwidth_opt&nbsp;=&nbsp;'X'.<br />
+&nbsp;&nbsp;gs_layout_pop-no_toolbar&nbsp;=&nbsp;'X'.&nbsp;"ALV&nbsp;#&nbsp;Tool&nbsp;bar&nbsp;#&nbsp;##<br />
+<br />
+&nbsp;&nbsp;PERFORM&nbsp;set_fcat_pop&nbsp;USING&nbsp;:<br />
+&nbsp;&nbsp;'X'&nbsp;&nbsp;&nbsp;'PLANETYPE'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'PLANETYPE'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SEATSMAX'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'SEATSMAX'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CONSUM'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'CONSUM'&nbsp;&nbsp;&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CON_UNIT'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'CON_UNIT'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'TANKCAP'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'TANKCAP'&nbsp;&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CAP_UNIT'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'CAP_UNIT'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'WEIGHT'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'WEIGHT'&nbsp;&nbsp;&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'WEI_UNIT'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'WEI_UNIT'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SPAN'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'SPAN'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SPAN_UNIT'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'SPAN_UNIT'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'LENG'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'LENG'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'LENG_UNIT'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'LENG_UNIT'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'OP_SPEED'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'OP_SPEED'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SPEED_UNIT'&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'SPEED_UNIT',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PRODUCER'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'PRODUCER'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SEATSMAX_B'&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'SEATSMAX_B',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SEATSMAX_F'&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SAPLANE'&nbsp;&nbsp;&nbsp;&nbsp;'SEATSMAX_F'.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;set_fcat_pop<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM set_fcat_pop  USING pv_key pv_field pv_text pv_ref_table pv_ref_field.<br />
+<br />
+&nbsp;&nbsp;gs_fcat_pop-key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;pv_key.<br />
+&nbsp;&nbsp;gs_fcat_pop-fieldname&nbsp;=&nbsp;pv_field.<br />
+&nbsp;&nbsp;gs_fcat_pop-coltext&nbsp;&nbsp;&nbsp;=&nbsp;pv_text.<br />
+&nbsp;&nbsp;gs_fcat_pop-ref_table&nbsp;=&nbsp;pv_ref_table.<br />
+&nbsp;&nbsp;gs_fcat_pop-ref_field&nbsp;=&nbsp;pv_ref_field.<br />
+<br />
+&nbsp;&nbsp;CASE&nbsp;pv_field.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHEN&nbsp;'TANKCAP'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gs_fcat_pop-qfieldname&nbsp;=&nbsp;'CAP_UNIT'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHEN&nbsp;'WEIGHT'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gs_fcat_pop-qfieldname&nbsp;=&nbsp;'WEI_UNIT'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHEN&nbsp;'OP_SPEED'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gs_fcat_pop-qfieldname&nbsp;=&nbsp;'SPEED_UNIT'.<br />
+<br />
+&nbsp;&nbsp;ENDCASE.<br />
+<br />
+&nbsp;&nbsp;APPEND&nbsp;gs_fcat_pop&nbsp;TO&nbsp;gt_fcat_pop.<br />
+&nbsp;&nbsp;CLEAR&nbsp;&nbsp;gs_fcat_pop.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Module&nbsp;DISPLAY_SCREEN_POP&nbsp;OUTPUT<br />
+*&---------------------------------------------------------------------*<br />
+*&<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+MODULE display_screen_pop OUTPUT.<br />
+<br />
+&nbsp;&nbsp;PERFORM&nbsp;display_screen_pop.<br />
+<br />
+ENDMODULE.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;display_screen_pop<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM display_screen_pop .<br />
+<br />
+&nbsp;&nbsp;IF&nbsp;gcl_container_pop&nbsp;IS&nbsp;NOT&nbsp;BOUND.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_container_pop<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;container_name&nbsp;=&nbsp;'GCL_CONTAINER_POP'.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_grid_pop<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_parent&nbsp;=&nbsp;gcl_container_pop.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CALL&nbsp;METHOD&nbsp;gcl_grid_pop-&gt;set_table_for_first_display<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_save&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'A'<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_default&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'X'<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is_layout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gs_layout_pop<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHANGING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;it_outtab&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gt_saplane<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;it_fieldcatalog&nbsp;=&nbsp;gt_fcat_pop.<br />
+<br />
+<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;handle_double_click<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;E_COLUMN<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;E_ROW<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM handle_double_click  USING   ps_column TYPE lvc_s_col<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ps_row&nbsp;&nbsp;&nbsp;&nbsp;TYPE&nbsp;lvc_s_row.<br />
+&nbsp;&nbsp;IF&nbsp;sy-subrc&nbsp;EQ&nbsp;0.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;READ&nbsp;TABLE&nbsp;gt_data&nbsp;INTO&nbsp;&nbsp;gs_data&nbsp;INDEX&nbsp;ps_row-index.<br />
+<br />
+   </div>
+   <div class="codeComment">
+*&nbsp;&nbsp;&nbsp;&nbsp;CASE1&gt;<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;IF&nbsp;ps_column-fieldname&nbsp;&lt;&gt;&nbsp;'PLANETYPE'.<br />
+*<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PERFORM&nbsp;get_sbook&nbsp;USING&nbsp;gs_data-carrid&nbsp;gs_data-connid&nbsp;gs_data-fldate.<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;ENDIF.<br />
+<br />
+*&nbsp;&nbsp;&nbsp;&nbsp;CASE2&gt;<br />
+<br />
+   </div>
+   <div class="code">
+CASE ps_column-fieldname.<br />
+&nbsp;&nbsp;WHEN&nbsp;'PLANETYPE'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;EXIT.<br />
+<br />
+&nbsp;&nbsp;WHEN&nbsp;OTHERS.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;PERFORM&nbsp;get_sbook&nbsp;USING&nbsp;gs_data-carrid&nbsp;gs_data-connid&nbsp;gs_data-fldate.<br />
+<br />
+ENDCASE.<br />
+<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;get_sbook<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;GS_DATA_PLANETYPE<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM get_sbook  USING   pv_carrid pv_connid pv_fldate.<br />
+<br />
+&nbsp;&nbsp;CLEAR&nbsp;:&nbsp;gs_sbook.<br />
+&nbsp;&nbsp;REFRESH&nbsp;:&nbsp;gt_sbook.<br />
+<br />
+&nbsp;&nbsp;SELECT&nbsp;carrid&nbsp;connid&nbsp;fldate&nbsp;bookid&nbsp;customid&nbsp;custtype<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;smoker&nbsp;luggweight&nbsp;wunit&nbsp;invoice&nbsp;class&nbsp;forcuram&nbsp;forcurkey<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loccuram&nbsp;loccurkey&nbsp;order_date&nbsp;counter&nbsp;agencynum&nbsp;cancelled<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;reserved&nbsp;passname&nbsp;passform&nbsp;passbirth<br />
+&nbsp;&nbsp;&nbsp;&nbsp;INTO&nbsp;CORRESPONDING&nbsp;FIELDS&nbsp;OF&nbsp;TABLE&nbsp;gt_sbook<br />
+&nbsp;&nbsp;&nbsp;&nbsp;FROM&nbsp;sbook<br />
+&nbsp;&nbsp;&nbsp;&nbsp;WHERE&nbsp;carrid&nbsp;=&nbsp;pv_carrid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND&nbsp;connid&nbsp;=&nbsp;pv_connid<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND&nbsp;fldate&nbsp;=&nbsp;pv_fldate.<br />
+<br />
+<br />
+&nbsp;&nbsp;IF&nbsp;sy-subrc&nbsp;NE&nbsp;0.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;MESSAGE&nbsp;s000&nbsp;WITH&nbsp;TEXT-m01&nbsp;DISPLAY&nbsp;LIKE&nbsp;'E'.<br />
+&nbsp;&nbsp;&nbsp;&nbsp;EXIT.<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+&nbsp;&nbsp;CALL&nbsp;SCREEN&nbsp;'0102'&nbsp;STARTING&nbsp;AT&nbsp;20&nbsp;3.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;gt_fcat_layout_pop2<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM gt_fcat_layout_pop2 .<br />
+<br />
+&nbsp;&nbsp;gs_layout_pop2-zebra&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'X'.<br />
+&nbsp;&nbsp;gs_layout_pop2-sel_mode&nbsp;&nbsp;&nbsp;=&nbsp;'D'.<br />
+&nbsp;&nbsp;gs_layout_pop2-cwidth_opt&nbsp;=&nbsp;'X'.<br />
+&nbsp;&nbsp;gs_layout_pop2-no_toolbar&nbsp;=&nbsp;'X'.&nbsp;"ALV&nbsp;#&nbsp;Tool&nbsp;bar&nbsp;#&nbsp;##<br />
+<br />
+&nbsp;&nbsp;PERFORM&nbsp;set_fcat_pop2&nbsp;USING&nbsp;:<br />
+&nbsp;&nbsp;'X'&nbsp;&nbsp;&nbsp;'CARRID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'CARRID'&nbsp;,<br />
+&nbsp;&nbsp;'X'&nbsp;&nbsp;&nbsp;'CONNID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'CONNID'&nbsp;,<br />
+&nbsp;&nbsp;'X'&nbsp;&nbsp;&nbsp;'FLDATE'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'FLDATE'&nbsp;,<br />
+&nbsp;&nbsp;'X'&nbsp;&nbsp;&nbsp;'BOOKID'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'BOOKID'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CUSTOMID'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'CUSTOMID'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CUSTTYPE'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'CUSTTYPE'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SMOKER'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'SMOKER'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'LUGGWEIGHT'&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'LUGGWEIGHT',<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'WUNIT'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'WUNIT'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'INVOICE'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;'INVOICE'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CLASS'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;&nbsp;'CLASS'&nbsp;&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'FORCURAM'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'FORCURAM'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'FORCURKEY'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'FORCURKEY'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'LOCCURAM'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'LOCCURAM'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'LOCCURKEY'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'LOCCURKEY'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'ORDER_DATE'&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'ORDER_DATE'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'COUNTER'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;&nbsp;'COUNTER'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'AGENCYNUM'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'AGENCYNUM'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'CANCELLED'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'CANCELLED'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'RESERVED'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'RESERVED'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PASSNAME'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'PASSNAME'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PASSFORM'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'PASSFORM'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PASSFORM'&nbsp;&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;&nbsp;'PASSFORM'&nbsp;,<br />
+&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'PASSBIRTH'&nbsp;&nbsp;&nbsp;'&nbsp;'&nbsp;&nbsp;&nbsp;'SBOOK'&nbsp;'PASSBIRTH'&nbsp;.<br />
+<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;set_fcat_pop2<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;--&gt;&nbsp;P_<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM set_fcat_pop2  USING pv_key pv_field pv_text pv_ref_table pv_ref_field.<br />
+<br />
+&nbsp;&nbsp;gs_fcat_pop2-key&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;pv_key.<br />
+&nbsp;&nbsp;gs_fcat_pop2-fieldname&nbsp;=&nbsp;pv_field.<br />
+&nbsp;&nbsp;gs_fcat_pop2-coltext&nbsp;&nbsp;&nbsp;=&nbsp;pv_text.<br />
+&nbsp;&nbsp;gs_fcat_pop2-ref_table&nbsp;=&nbsp;pv_ref_table.<br />
+&nbsp;&nbsp;gs_fcat_pop2-ref_field&nbsp;=&nbsp;pv_ref_field.<br />
+<br />
+<br />
+&nbsp;&nbsp;APPEND&nbsp;gs_fcat_pop2&nbsp;TO&nbsp;gt_fcat_pop2.<br />
+&nbsp;&nbsp;CLEAR&nbsp;&nbsp;gs_fcat_pop2.<br />
+<br />
+ENDFORM.<br />
+   </div>
+   <div class="codeComment">
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;Form&nbsp;display_screen_pop2<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+*&&nbsp;--&gt;&nbsp;&nbsp;p1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&&nbsp;&lt;--&nbsp;&nbsp;p2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;text<br />
+*&---------------------------------------------------------------------*<br />
+   </div>
+   <div class="code">
+FORM display_screen_pop2 .<br />
+<br />
+&nbsp;&nbsp;IF&nbsp;gcl_container_pop2&nbsp;IS&nbsp;NOT&nbsp;BOUND.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_container_pop2<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;container_name&nbsp;=&nbsp;'GCL_CONTAINER_POP2'.<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CREATE&nbsp;OBJECT&nbsp;gcl_grid_pop2<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_parent&nbsp;=&nbsp;gcl_container_pop2.<br />
+<br />
+<br />
+&nbsp;&nbsp;&nbsp;&nbsp;CALL&nbsp;METHOD&nbsp;gcl_grid_pop2-&gt;set_table_for_first_display<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;EXPORTING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_save&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'A'<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_default&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;'X'<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is_layout&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gs_layout_pop2<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;CHANGING<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;it_outtab&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;=&nbsp;gt_sbook<br />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;it_fieldcatalog&nbsp;=&nbsp;gt_fcat_pop2.<br />
+<br />
+&nbsp;&nbsp;ENDIF.<br />
+<br />
+ENDFORM.<br />
+            </div>
+          </td>
+        </tr>
+      </table>
+      </td>
+      </tr>
+   <tr>
+<td class="footer">Extracted by Mass Download version 1.5.5 - E.G.Mellodew. 1998-2022. Sap Release 754</td>
+   </tr>
+</table>
+</body>
+</html>
