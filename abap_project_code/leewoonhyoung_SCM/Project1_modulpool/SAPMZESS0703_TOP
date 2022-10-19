@@ -1,0 +1,38 @@
+*&---------------------------------------------------------------------*
+*& Include SAPMZESS0703_TOP                         - Module Pool      SAPMZESS0703
+*&---------------------------------------------------------------------*
+PROGRAM sapmzess0703 MESSAGE-ID zmcess.
+
+
+TABLES : zsess24001, "Screen 100의 fieldCatelog.       #ztess24001_h => table type.
+         zsess24002, "Screen 100의 구매오더코드 Condition.
+         zsess23001, "Screen 300의 생성                 #ztess23001_h
+         zsess24003. "Screen 301 구매오더 생성화면 Structure.
+
+*개별 변수 설정.
+DATA : gs_order       TYPE zsess24001, "Screen 100 구매오더 Structure
+       gt_order       TYPE TABLE OF zsess24001, "Screen 100 구매오더 Table
+       gs_orderdetail TYPE zsess23001, "Screen 200 구매상세오더 Sturcutre
+       gt_orderdetail TYPE TABLE OF zsess23001. "Screen 200 구매상세오더 Table
+
+
+
+*ALV 세팅.
+DATA : gcl_container    TYPE REF TO cl_gui_custom_container,
+       gcl_container200 TYPE REF TO cl_gui_custom_container,
+       gcl_alv_grid     TYPE REF TO cl_gui_alv_grid,
+       gcl_alv_grid200  TYPE REF TO cl_gui_alv_grid,
+       ok_code          TYPE        sy-ucomm,
+       gs_layo          TYPE        lvc_s_layo,
+       gs_fcat          TYPE        lvc_s_fcat, "Screen 100
+       gt_fcat          TYPE        lvc_t_fcat, "Screen 100
+       gs_fcat200       TYPE        lvc_s_fcat, "Screen 200
+       gt_fcat200       TYPE        lvc_t_fcat, "Screen 200
+       gt_rows          TYPE        lvc_t_row,
+       gs_row           TYPE        lvc_s_row.
+
+*ST_STATUS 조작 변수.
+DATA : gi_return(1) TYPE c.
+
+*Calculator Algorithm val.
+data : gv_id(14) TYPE c. "구매오더코드 자동 채번 알고리즘 변수.

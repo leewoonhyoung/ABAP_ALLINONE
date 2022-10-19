@@ -1,0 +1,18 @@
+*&---------------------------------------------------------------------*
+*& Module Pool      SAPMZESS0703
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+
+INCLUDE sapmzess0703_top                        .  " Global Data
+INCLUDE sapmzess0703_o01                        .  " PBO-Modules
+INCLUDE sapmzess0703_i01                        .  " PAI-Modules
+INCLUDE sapmzess0703_f01                        .  " FORM-Routines
+
+
+LOAD-OF-PROGRAM.
+
+  "초기 구매오더코드 조건에  default 값 대입.
+  PERFORM init_sel_cond USING    zsess24001-prhid
+                        CHANGING zsess24002-prhid_b
+                                 zsess24002-prhid_e.

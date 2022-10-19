@@ -1,0 +1,204 @@
+*&---------------------------------------------------------------------*
+*& Include          SAPMZESS0703_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      CLEAR ok_code.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SEARCH'.
+      CLEAR ok_code.
+      "Search 버튼 클릭시 조건에 맞는 데이터 alv에 전달
+      PERFORM set_data USING gs_order
+                             zsess24002-prhid_b
+                             zsess24002-prhid_e
+                       CHANGING gt_order.
+      gi_return = 'X'. "SET_STATUS 설정.
+
+    WHEN 'DETAIL'.
+      CLEAR ok_code.
+
+      "Search실행 후  ALV 클릭시 해당 행에 저장되어 있는 index 가져오기.
+      PERFORM set_selected_rows.
+
+      "ALV index에 해당하는 DATA를 SCREEN200 구매오더상세DATA로 미리 탑재.
+      PERFORM set_detail_data USING    gs_row
+                                       gt_rows
+                                       gt_order
+                                       gs_order
+                              CHANGING zsess24001.
+      CALL SCREEN 200.
+
+    WHEN 'CREATE'.
+      CLEAR ok_code.
+      CALL SCREEN 301.
+
+    WHEN 'EDIT'.
+      CLEAR ok_code.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv. "alv + container 제거.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  VALIDATION_100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE validation_100 INPUT.
+
+* Screen 100번의 구매오더코드 왼쪽 조건과 오른쪽 조건에 대한 validation.
+  PERFORM validation_prhid USING  zsess24002-prhid_b
+                                  zsess24002-prhid_e.
+
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0200 INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv_200. "alv + container 제거.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+
+  CASE ok_code.
+    WHEN 'DETAIL'.
+      CLEAR ok_code.
+
+    WHEN 'CREATE'.
+      CLEAR ok_code.
+
+*     구매오더상세 화면 구매오더코드 세팅
+      PERFORM set_orderdetail_prhid USING    zsess24001-prhid
+                                    CHANGING zsess23001-prhid.
+
+*     구매오더상세 화면 문서발행일자 세팅
+      PERFORM set_prbdt_datum  USING    zsess23001-prbdt
+                               CHANGING zsess23001-prbdt.
+
+      CALL SCREEN 300.
+
+    WHEN 'BACK'.
+      CLEAR : ok_code.
+*     업데이트된 gt_order data를 넣는다.
+      PERFORM set_data USING gs_order
+                             zsess24002-prhid_b
+                             zsess24002-prhid_e
+                       CHANGING gt_order.
+      LEAVE TO SCREEN 0.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0300  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0300 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      CLEAR ok_code.
+      LEAVE TO SCREEN 0.
+    WHEN 'SAVE'.
+*     데이터 저장시 주문상세table(ztess2301) insert + alv 내용 추가.
+      PERFORM set_detail_ndata USING    zsess23001
+                                        gs_orderdetail
+                               CHANGING gt_orderdetail.
+
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0300  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0300 INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv_200. "alv + container 제거.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0301  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0301 INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0301  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0301 INPUT.
+
+  CASE ok_code.
+    WHEN 'SAVE'.
+      " 저장하는 시점에 구매오더상세코드 생성이 되어야 한다.
+      " TODO Screen 에서 구매오더 상세코드지우기
+      " TODO 자동 채번 기능 재사용 하기.
+      CLEAR ok_code.
+
+    WHEN 'BACK'.
+      CLEAR ok_code.
+      LEAVE TO SCREEN 0.
+    WHEN OTHERS.
+  ENDCASE.
+
+
+ENDMODULE.
