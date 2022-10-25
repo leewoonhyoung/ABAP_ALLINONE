@@ -1,0 +1,2083 @@
+&---------------------------------------------------------------------*
+*& Include          SAPMZESS0703_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Form clear_alv
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM clear_alv .
+
+  IF gcl_alv_grid IS NOT INITIAL.
+    CALL METHOD gcl_alv_grid->free.
+    CALL METHOD gcl_container->free.
+    CLEAR : gcl_alv_grid, gcl_container.
+
+  ENDIF.
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat_layout
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat_layout .
+
+  CLEAR : gs_layo.
+  PERFORM setting_layout CHANGING gs_layo.
+
+  IF gt_fcat IS INITIAL.
+
+    PERFORM set_fcat100_1 USING :    gs_fcat-fieldname
+                                     gs_fcat-coltext
+                                     gs_fcat-ref_table
+                                     gs_fcat-ref_field
+                                     gs_fcat-edit
+                                     gs_fcat-no_out
+                                     gs_fcat-icon
+                          CHANGING : gs_fcat
+                                     gt_fcat.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form init_sel_cond
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24001
+*&      <-- ZSESS24002_PRHID_B
+*&      <-- ZSESS24002_PRHID_E
+*&---------------------------------------------------------------------*
+FORM init_sel_cond  USING    VALUE(p_prhid) TYPE zsess24001-prhid
+                    CHANGING       p_prhid_b
+                                   p_prhid_e.
+* todo load of program 으로 보내기.
+  SELECT SINGLE MIN( prhid )
+    FROM ztess2401
+    INTO p_prhid.
+
+  p_prhid_b = p_prhid. "Screen 100번 왼쪽 조건 대입"
+  CLEAR : p_prhid.
+
+  SELECT SINGLE MAX( prhid )
+    FROM ztess2401
+    INTO p_prhid.
+
+  p_prhid_e = p_prhid. "Screen 100번 오른쪽 조건 대입"
+  CLEAR : p_prhid.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_alv_grid_100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_alv_grid_100 .
+
+  IF gcl_alv_grid IS NOT BOUND.
+    CREATE OBJECT gcl_alv_grid
+      EXPORTING
+*       i_shellstyle      = 0                " Control Style
+*       i_lifetime        =                  " Lifetime
+        i_parent          = gcl_container                 " Parent Container
+*       i_appl_events     = space            " Register Events as Application Events
+*       i_parentdbg       =                  " Internal, Do not Use
+*       i_applogparent    =                  " Container for Application Log
+*       i_graphicsparent  =                  " Container for Graphics
+*       i_name            =                  " Name
+*       i_fcat_complete   = space            " Boolean Variable (X=True, Space=False)
+*       o_previous_sral_handler =
+      EXCEPTIONS
+        error_cntl_create = 1                " Error when creating the control
+        error_cntl_init   = 2                " Error While Initializing Control
+        error_cntl_link   = 3                " Error While Linking Control
+        error_dp_create   = 4                " Error While Creating DataProvider Control
+        OTHERS            = 5.
+    IF sy-subrc <> 0.
+*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*       WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_first_display_100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_first_display_100 .
+
+  CALL METHOD gcl_alv_grid->set_table_for_first_display
+    EXPORTING
+*     i_buffer_active               =
+*     i_bypassing_buffer            =
+*     i_consistency_check           =
+      i_structure_name              = 'ZSESS24001'
+*     is_variant                    =
+*     i_save                        =
+*     i_default                     = 'X'
+      is_layout                     = gs_layo
+*     is_print                      =
+*     it_special_groups             =
+*     it_toolbar_excluding          =
+*     it_hyperlink                  =
+*     it_alv_graphics               =
+*     it_except_qinfo               =
+*     ir_salv_adapter               =
+    CHANGING
+      it_outtab                     = gt_order
+      it_fieldcatalog               = gt_fcat
+*     it_sort                       =
+*     it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form validation_prhid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS2401_PRHID_B
+*&      --> ZSESS2401_PRHID_E
+*&---------------------------------------------------------------------*
+FORM validation_prhid  USING    VALUE(p_prhid_b) TYPE zsess24002-prhid_b
+                                VALUE(p_prhid_e) TYPE zsess24002-prhid_e.
+
+  IF p_prhid_b IS INITIAL.
+    MESSAGE e000 WITH '구매오더코드의 시작 값을 입력해주세요.'.
+
+
+  ELSEIF p_prhid_e IS INITIAL.
+    MESSAGE e000 WITH '구매오더코드의 마지막 값을 입력해주세요.'.
+
+
+  ELSEIF p_prhid_b GT p_prhid_e.
+    MESSAGE e000 WITH '구매오더코드의 마지막 값이 시작 값보다 작습니다. 다시 입력해주세요.'.
+
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GS_ORDER
+*&      --> GT_ORDER
+*&      --> ZSESS24002_PRHID_B
+*&      --> ZSESS24002_PRHID_E
+*&      <-- ZTESS2401
+*&---------------------------------------------------------------------*
+FORM set_data  USING    VALUE(ps_order)   TYPE zsess24001
+                        VALUE(pv_prhid_b) TYPE zsess24002-prhid_b
+                        VALUE(pv_prhid_e) TYPE zsess24002-prhid_e
+                        VALUE(pv_pntid)   TYPE zsess24002-pntid
+               CHANGING       pt_order    TYPE ztess24001_h. "ztess24001_h => zsess24001을 사용한  table type
+
+  DATA : lt_order TYPE TABLE OF ztess2401,
+         ls_order LIKE LINE OF lt_order.
+
+  CLEAR : ps_order, lt_order, ls_order.
+  REFRESH : pt_order.
+
+
+  CASE g_mytab-pressed_tab.
+    WHEN c_mytab-tab1.
+* 조건에 맞는 구매오더코드 data가져오기.
+      PERFORM get_prhid_lt_order USING pv_prhid_b
+                                       pv_prhid_e
+                                 CHANGING lt_order.
+
+* 조건에 맞는 구매오더코드의 추가 정보들을 JOIN 하는 로직.
+* 구매오더 table(ZTESS2401) 위탁공장 table(ZTESS2501) 사원 table(ZTESS0301)'
+      PERFORM set_ltorder_plus  USING ls_order
+                                      lt_order
+                                      ps_order
+                                CHANGING pt_order.
+
+    WHEN c_mytab-tab2.
+
+
+* 조건에 맞는 구매오더코드 data가져오기. # 공장코드
+      PERFORM get_prhid_lt_order_2  USING pv_pntid
+                                 CHANGING lt_order.
+
+* 구매오더 table(ZTESS2401) 위탁공장 table(ZTESS2501) 사원 table(ZTESS0301)'
+      PERFORM set_ltorder_plus  USING ls_order
+                                      lt_order
+                                      ps_order
+                                CHANGING pt_order.
+
+
+
+  ENDCASE.
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24001_PRHID
+*&      --> ZSESS24001_PNTID
+*&      --> ZSESS24001_PNTNM
+*&      --> ZSESS24001_EMPID
+*&      --> ZSESS24001_EMPNA
+*&      --> ZSESS24001_TITLE
+*&      --> ZSESS24001_PRDAT
+*&      --> ZSESS24001_CRTDM
+*&      --> ZSESS24001_TOTLP
+*&      --> ZSESS24001_CURRC
+*&      --> ZSESS24001_ODCHK
+*&      <-- GT_FCAT
+*&---------------------------------------------------------------------*
+*FORM set_fcat100  USING  VALUE(p_prhid) TYPE zsess24001-prhid
+*                         VALUE(p_pntid) TYPE zsess24001-pntid
+*                         VALUE(p_pntnm) TYPE zsess24001-pntnm
+*                         VALUE(p_empid) TYPE zsess24001-empid
+*                         VALUE(p_empna) TYPE zsess24001-empna
+*                         VALUE(p_title) TYPE zsess24001-title
+*                         VALUE(p_prdat) TYPE zsess24001-prdat
+*                         VALUE(p_crtdm) TYPE zsess24001-crtdm
+*                         VALUE(p_totlp) TYPE zsess24001-totlp
+*                         VALUE(p_currc) TYPE zsess24001-currc
+*                         VALUE(p_odchk) TYPE zsess24001-odchk
+*                  CHANGING      ps_fcat TYPE lvc_s_fcat.
+*                                pt_fcat TYPE lvc_t_fcat.
+*
+*
+*  gs_fcat-fieldname = pv_field.
+*  gs_fcat-coltext   = pv_text.
+*  gs_fcat-ref_table = pv_ref_table.
+*  gs_fcat-ref_field = pv_ref_field.
+*  gs_fcat-edit      = pv_edit.
+*  gs_fcat-no_out    = pv_no_out.  "ALV LIST에서 보이지 않을 필드
+
+*ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat100_1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GS_FCAT_FIELDNAME
+*&      --> GS_FCAT_COLTEXT
+*&      --> GS_FCAT_REF_TABLE
+*&      --> GS_FCAT_REF_FIELD
+*&      --> GS_FCAT_EDIT
+*&      --> GS_FCAT_NO_OUT
+*&      <-- GT_FCAT
+*&---------------------------------------------------------------------*
+FORM set_fcat100_1  USING     VALUE(pv_fieldname)  TYPE lvc_s_fcat-fieldname
+                              VALUE(pv_coltext)    TYPE lvc_s_fcat-coltext
+                              VALUE(pv_ref_table)  TYPE lvc_s_fcat-ref_table
+                              VALUE(pv_ref_field)  TYPE lvc_s_fcat-ref_field
+                              VALUE(pv_edit)       TYPE lvc_s_fcat-edit
+                              VALUE(pv_no_out)     TYPE lvc_s_fcat-no_out
+                              VALUE(pv_icon)       TYPE lvc_s_fcat-icon
+                    CHANGING         ps_fcat      TYPE lvc_s_fcat
+                                     pt_fcat       TYPE lvc_t_fcat.
+
+*PERFORM set_psTo_pt.
+
+* 구매오더코드
+  pv_fieldname = 'PRHID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'PRHID'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 공장코드
+  pv_fieldname = 'PNTID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'PNTID'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 공장명
+  pv_fieldname = 'PNTNM'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2501'.
+  pv_ref_field = 'PNTNM'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 사원코드
+  pv_fieldname = 'EMPID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'EMPID'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 사원명
+  pv_fieldname = 'EMPNA'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS0301'.
+  pv_ref_field = 'EMPNA'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 제목
+  pv_fieldname = 'TITLE'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'TITLE'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 발주일자
+  pv_fieldname = 'PRDAT'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'PRDAT'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 문서생성일시
+  pv_fieldname = 'CRTDM'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'CRTDM'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 총구매금액
+  pv_fieldname = 'TOTLP'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'TOTLP'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 통화
+  pv_fieldname = 'CURRC'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'CURRC'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+* 담당자 승인 여부
+  pv_fieldname = 'ODCHK'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'ODCHK'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR : ps_fcat.
+
+*아이콘
+  pv_fieldname = 'ICOND'.
+  pv_coltext   = '담당자승인여부'.
+  pv_icon      = 'X'.
+
+  ps_fcat-fieldname = pv_fieldname.
+  ps_fcat-coltext = pv_coltext.
+  ps_fcat-ref_table = pv_ref_table.
+  ps_fcat-ref_field = pv_ref_field.
+  ps_fcat-edit = pv_edit.
+  ps_fcat-no_out = pv_no_out.
+  ps_fcat-icon   =  pv_icon.
+  APPEND ps_fcat TO pt_fcat.
+  CLEAR ps_fcat.
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_psTo_pt
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_psto_pt .
+
+*  ps_fcat-fieldname = pv_fieldname .
+*  ps_fcat-coltext   = pv_coltext   .
+*  ps_fcat-ref_table = pv_ref_table .
+*  ps_fcat-ref_field = pv_ref_field .
+*  ps_fcat-edit      = pv_edit      .
+*  ps_fcat-no_out    = pv_no_out    .
+*  APPEND ps_fcat TO pt_fcat.
+*  CLEAR : ps_fcat.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_selected_rows
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_selected_rows .
+
+  CLEAR : gt_rows, gs_row.
+
+  CALL METHOD gcl_alv_grid->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+
+  IF gt_rows IS INITIAL.
+    MESSAGE e000 WITH '행을 선택해주세요.'.
+    RETURN.
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_detail_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GS_ROW
+*&      --> GT_ROWS
+*&      --> GT_ORDER
+*&      --> GS_ORDER
+*&      <-- ZSESS24001
+*&---------------------------------------------------------------------*
+FORM set_detail_data  USING    VALUE(ps_row)      TYPE lvc_s_row
+                               VALUE(pt_rows)     TYPE lvc_t_row
+                               VALUE(pt_order)    TYPE ztess24001_h
+                               VALUE(ps_order)    TYPE zsess24001
+                      CHANGING       p_zsess24001 TYPE zsess24001.
+
+
+  CLEAR : p_zsess24001.
+
+  IF sy-subrc EQ 0.
+    LOOP AT pt_rows INTO ps_row.
+
+      READ TABLE pt_order INTO ps_order INDEX ps_row-index. "Screen 100의 검색버튼 작동 이후, ALV에서 선택한 값을 Screen 200에 미리 대입.
+
+      p_zsess24001-prhid = ps_order-prhid. " 구매오더코드
+      p_zsess24001-pntid = ps_order-pntid. " 공장코드
+      p_zsess24001-pntnm = ps_order-pntnm. " 공장명
+      p_zsess24001-empid = ps_order-empid. " 사원코드
+      p_zsess24001-empna = ps_order-empna. " 사원 이름
+      p_zsess24001-title = ps_order-title. " 제목
+      p_zsess24001-prdat = ps_order-prdat. " 발주일자
+      p_zsess24001-crtdm = ps_order-crtdm. " 문서생성일시
+      p_zsess24001-totlp = ps_order-totlp. " 총구매금액
+      p_zsess24001-currc = ps_order-currc. " 통화
+      p_zsess24001-odchk = ps_order-odchk. " 담당자 승인 여부
+
+    ENDLOOP.
+
+  ENDIF.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form clear_alv_200
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM clear_alv_200 .
+
+  IF gcl_alv_grid200 IS NOT INITIAL.
+    CALL METHOD gcl_alv_grid200->free.
+    CALL METHOD gcl_container200->free.
+    CLEAR : gcl_alv_grid200, gcl_container200.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat_layout_200
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_fcat_layout_200 .
+
+  CLEAR : gs_layo. "이전 Screen에서 사용한 gs_layout 제거.
+  gs_layo-zebra = 'X'.
+  gs_layo-cwidth_opt = 'X'.
+
+  IF gt_fcat200 IS INITIAL.
+
+    PERFORM set_fcat200_1 USING :    gs_fcat200-fieldname
+                                     gs_fcat200-coltext
+                                     gs_fcat200-ref_table
+                                     gs_fcat200-ref_field
+                                     gs_fcat200-edit
+                                     gs_fcat200-no_out
+                                     gs_fcat200-icon
+                                     gs_fcat200-col_pos
+                                     gs_fcat200-currency
+                          CHANGING : gt_fcat200.
+
+
+
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_fcat200_1
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GS_FCAT_FIELDNAME200
+*&      --> GS_FCAT_COLTEXT200
+*&      --> GS_FCAT_REF_TABLE200
+*&      --> GS_FCAT_REF_FIELD200
+*&      --> GS_FCAT_EDIT200
+*&      --> GS_FCAT_NO_OUT200
+*&      --> GS_FCAT_ICON200
+*&      <-- GT_FCAT200
+*&---------------------------------------------------------------------*
+FORM set_fcat200_1  USING     pv_fieldname  TYPE lvc_s_fcat-fieldname
+                              pv_coltext    TYPE lvc_s_fcat-coltext
+                              pv_ref_table  TYPE lvc_s_fcat-ref_table
+                              pv_ref_field  TYPE lvc_s_fcat-ref_field
+                              pv_edit       TYPE lvc_s_fcat-edit
+                              pv_no_out     TYPE lvc_s_fcat-no_out
+                              pv_icon       TYPE lvc_s_fcat-icon
+                              pv_col_pos    TYPE lvc_s_fcat-col_pos
+                              pv_currency   TYPE lvc_s_fcat-currency
+                    CHANGING  pt_fcat       TYPE lvc_t_fcat.
+
+
+* 구매오더상세코드
+  pv_fieldname = 'PODID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'PODID'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '1'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 구매오더코드
+  pv_fieldname = 'PRHID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'PRHID'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 사원코드
+  pv_fieldname = 'EMPID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'EMPID'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 사원명
+  pv_fieldname = 'EMPNA'.
+  pv_coltext   = '담당 사원명'.
+  pv_ref_table = 'ZTESS0301'.
+  pv_ref_field = 'EMPNA'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '2'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 제품코드
+  pv_fieldname = 'PRDID'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2501'.
+  pv_ref_field = 'PRDID'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 제품명
+  pv_fieldname = 'PRDNM'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2501'.
+  pv_ref_field = 'PRDNM'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '3'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+
+* 제품수량
+  pv_fieldname = 'PDCNT'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2301'.
+  pv_ref_field = 'PDCNT'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '4'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 제품 원가
+  pv_fieldname = 'PRDCO'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS1501'.
+  pv_ref_field = 'PRDCO'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '5'.
+  pv_currency  = 'KRW'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 제품 원가별 총합
+
+  pv_fieldname = 'SUMAL'.
+  pv_coltext   = '원가 총합'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '6'.
+  pv_currency  = 'KRW'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 수량단위
+  pv_fieldname = 'PUNIT'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2301'.
+  pv_ref_field = 'PUNIT'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '7'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 구매요청일자
+  pv_fieldname = 'PRBDT'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2301'.
+  pv_ref_field = 'PRBDT'.
+  pv_edit      = ' '.
+  pv_no_out    = ' '.
+  pv_col_pos   = '8'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+* 담당자 승인 여부
+  pv_fieldname = 'ODCHK'.
+  pv_coltext   = ' '.
+  pv_ref_table = 'ZTESS2401'.
+  pv_ref_field = 'ODCHK'.
+  pv_edit      = ' '.
+  pv_no_out    = 'X'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR : gs_fcat.
+
+*아이콘
+  pv_fieldname = 'ICOND'.
+  pv_coltext   = '담당자승인여부'.
+  gs_fcat-icon      = 'X'.
+  APPEND gs_fcat200 TO pt_fcat.
+  CLEAR gs_fcat.
+
+
+
+
+
+
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_container_200
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_container_200 .
+
+*container 생성
+  IF gcl_container200 IS NOT BOUND.
+    CREATE OBJECT gcl_container200
+      EXPORTING
+*       parent                      =                  " Parent container
+        container_name              = 'CON2'                 " Name of the Screen CustCtrl Name to Link Container To
+*       style                       =                  " Windows Style Attributes Applied to this Container
+*       lifetime                    = lifetime_default " Lifetime
+*       repid                       =                  " Screen to Which this Container is Linked
+*       dynnr                       =                  " Report To Which this Container is Linked
+*       no_autodef_progid_dynnr     =                  " Don't Autodefined Progid and Dynnr?
+      EXCEPTIONS
+        cntl_error                  = 1                " CNTL_ERROR
+        cntl_system_error           = 2                " CNTL_SYSTEM_ERROR
+        create_error                = 3                " CREATE_ERROR
+        lifetime_error              = 4                " LIFETIME_ERROR
+        lifetime_dynpro_dynpro_link = 5                " LIFETIME_DYNPRO_DYNPRO_LINK
+        OTHERS                      = 6.
+    IF sy-subrc <> 0.
+*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*       WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_alv_grid_200
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_alv_grid_200 .
+
+  IF gcl_alv_grid200 IS NOT BOUND.
+    CREATE OBJECT gcl_alv_grid200
+      EXPORTING
+*       i_shellstyle      = 0                " Control Style
+*       i_lifetime        =                  " Lifetime
+        i_parent          = gcl_container200                 " Parent Container
+*       i_appl_events     = space            " Register Events as Application Events
+*       i_parentdbg       =                  " Internal, Do not Use
+*       i_applogparent    =                  " Container for Application Log
+*       i_graphicsparent  =                  " Container for Graphics
+*       i_name            =                  " Name
+*       i_fcat_complete   = space            " Boolean Variable (X=True, Space=False)
+*       o_previous_sral_handler =
+      EXCEPTIONS
+        error_cntl_create = 1                " Error when creating the control
+        error_cntl_init   = 2                " Error While Initializing Control
+        error_cntl_link   = 3                " Error While Linking Control
+        error_dp_create   = 4                " Error While Creating DataProvider Control
+        OTHERS            = 5.
+    IF sy-subrc <> 0.
+*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*       WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_first_display_200
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_first_display_200 .
+
+  CALL METHOD gcl_alv_grid200->set_table_for_first_display
+    EXPORTING
+*     i_buffer_active               =
+*     i_bypassing_buffer            =
+*     i_consistency_check           =
+      i_structure_name              = 'ZSESS23001'
+*     is_variant                    =
+*     i_save                        =
+*     i_default                     = 'X'
+      is_layout                     = gs_layo
+*     is_print                      =
+*     it_special_groups             =
+*     it_toolbar_excluding          =
+*     it_hyperlink                  =
+*     it_alv_graphics               =
+*     it_except_qinfo               =
+*     ir_salv_adapter               =
+    CHANGING
+      it_outtab                     = gt_orderdetail
+      it_fieldcatalog               = gt_fcat200
+*     it_sort                       =
+*     it_filter                     =
+    EXCEPTIONS
+      invalid_parameter_combination = 1
+      program_error                 = 2
+      too_many_lines                = 3
+      OTHERS                        = 4.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_prhid_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24001_PRHID
+*&      <-- GT_ORDERDETAIL
+*&---------------------------------------------------------------------*
+FORM set_prhid_data  USING    VALUE(pv_prhid)       TYPE zsess24001-prhid
+                              VALUE(ps_orderdetail) TYPE zsess23001
+                     CHANGING pt_orderdetail        TYPE ztess23001_h.
+
+
+  SELECT a~podid "구매오더상세코드
+         a~prhid
+         a~prdid
+         a~pdcnt
+         a~punit
+         a~prbdt
+         a~odchk
+         a~empid
+         b~prdnm  "제품이름
+         c~empna  "사원이름
+         d~prdco  "제품 원가
+   INTO CORRESPONDING FIELDS OF TABLE pt_orderdetail
+   FROM ztess2301 AS a       " 구매오더 상세 TABLE
+   INNER JOIN ztess1601 AS b " 제품 TABLE
+   ON a~prdid = b~prdid      " 제품코드 비교 join 해서 '제품 이름'을 얻는 목적
+   INNER JOIN ztess0301 AS c " 사원 TABLE
+   ON a~empid = c~empid      " 사원코드 비교 join 해서 '사원 이름'을 얻는 목적
+   INNER JOIN ztess1501 AS d " 제품 원가 이력 TABLE
+   ON a~prdid = d~prdid     "제품코드가 같고 만료일자가 9999-12-31인 조건을 비교해서 '제품 원가를 얻는 목적'
+   AND d~valide = '99991231'
+   WHERE prhid = pv_prhid "스크린의 오더코드와,  똑같은 오더코드를 가지고 있는 데이터를 DB에서가져와 주세요.
+   ORDER BY podid. " 구매오더상세코드를 기준으로 오름차순 해주세요.
+
+  " 해당 오더코드에 속한 오더상세코드들 각각에 대한 원가 총합을 구하는 로직 + internal table 업데이트,  NOT DB반영.
+  PERFORM set_sumal_data USING    ps_orderdetail
+                         CHANGING pt_orderdetail.
+
+
+
+
+
+
+*수정 이전 code-----------------------------------------------------------------------------------------------------------------------
+*perform 예정
+*alv에서 가져온 총 행들의 총 합을 구한 후, 스트럭쳐를 변경하고, db에 직접 반영하여, 구매오더의  총금액을 바꾸는 작업.
+*  PERFORM set_totlp_db   USING ps_orderdetail
+*                               pt_orderdetail
+*                         CHANGING  zsess24001-totlp.
+
+
+
+**과거 CODE. -수정 전-
+** perform 예정
+**제품 원가 가장 최신꺼 pt_orderdetail에 반영하기
+*
+*  DATA : lv_prdid TYPE zsess23001-prdid.
+*  DATA : lt_data TYPE TABLE OF ztess1501,
+*         ls_data LIKE LINE OF lt_data.
+*  DATA : ls_tmp LIKE LINE OF lt_data.
+*
+*  CLEAR   : lv_prdid, ls_data, ls_tmp.
+*  REFRESH : lt_data.
+*
+**Loop를 돌면서 각 줄의 제품코드들의 가격 정보를 가져온다.
+*  LOOP AT pt_orderdetail INTO ps_orderdetail.
+*    lv_prdid = ps_orderdetail-prdid.
+*    CLEAR: lt_data.
+*
+*    SELECT *
+*    INTO CORRESPONDING FIELDS OF TABLE lt_data
+*    FROM ztess1501
+*    WHERE prdid = lv_prdid
+*    ORDER BY validb DESCENDING.
+*
+*
+**  valide 를 변수를 활용해서 사용하기. =>TODO 코드 최적화
+*
+*    READ TABLE lt_data INTO ls_data INDEX 1.
+*    ls_tmp = ls_data.
+*    CLEAR : ls_data.
+*
+*    ps_orderdetail-prdco = ls_tmp-prdco. "제품 원가
+*    ps_orderdetail-sumal = ls_tmp-prdco * ps_orderdetail-pdcnt. " 제품 총가격.
+*    CLEAR : ls_tmp.
+*
+*    MODIFY pt_orderdetail FROM ps_orderdetail.
+*    CLEAR : ps_orderdetail.
+*
+*  ENDLOOP.
+*
+**perform 예정
+**alv에서 가져온 총 행들의 총 합을 구한 후, db에 직접 반영하여, 구매오더의  총금액을 바꾸는 작업.
+*  DATA : lv_cnt TYPE c LENGTH 30.
+*  DATA : lv_prhid2 TYPE zsess23001-prhid.
+*  CLEAR : lv_cnt, lv_prhid2, gs_orderdetail.
+*
+*  LOOP AT gt_orderdetail INTO gs_orderdetail.
+*    lv_cnt += gs_orderdetail-sumal.
+*  ENDLOOP.
+*
+*  IF gs_orderdetail-prhid EQ zsess24001-prhid.
+*    lv_prhid2 = zsess24001-prhid.
+*    zsess24001-totlp = lv_cnt.
+*
+*    UPDATE ztess2401 SET totlp = lv_cnt WHERE prhid = lv_prhid2.
+*
+*
+** TODO COmmit or rollback.
+**    IF sy-subrc EQ 0.
+**
+**    ENDIF.
+*
+*  ENDIF.
+*
+*  IF sy-subrc EQ 0.
+*
+*  ENDIF.
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_orderdetail_prhid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24001_PRHID
+*&      <-- ZSESS23001_PRHID
+*&---------------------------------------------------------------------*
+FORM set_orderdetail_prhid  USING    VALUE(pv_prhid_h) TYPE zsess24001-prhid
+                            CHANGING       pv_prhid_d  TYPE zsess23001-prhid.
+
+  pv_prhid_d = pv_prhid_h.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_detail_ndata
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS23001
+*&      --> GS_ORDERDETAIL
+*&      <-- GT_ORDERDETAIL
+*&---------------------------------------------------------------------*
+FORM set_detail_ndata  USING    VALUE(ps_zsess23001) TYPE zsess23001
+                                VALUE(ps_orderdetail) TYPE zsess23001 "상세코드
+                       CHANGING pt_orderdetail TYPE ztess23001_h.
+
+
+  DATA : ls_save  TYPE ztess2301,
+         lt_save  TYPE TABLE OF ztess2301,
+         lv_name  TYPE zsess24001-empna, " 사원 이름
+         lv_prdnm TYPE zsess23001-prdnm, " 제품 이름
+         lv_prdco TYPE zsess23001-prdco.  " 제품 원가
+
+  CLEAR : ls_save, lv_name, lv_prdnm, lv_prdco.
+  REFRESH : lt_save.
+
+
+* Screen 구매상세코드를 자동으로 채번해 주는 프로그램.
+  PERFORM before_each_pohid USING    ps_zsess23001
+                            CHANGING ps_zsess23001-podid
+                                     ps_zsess23001-prbdt.
+
+
+* Screen layout 에서 입력된 변수를 structure에 저장.
+  PERFORM set_layout_orderdetail USING    ps_zsess23001
+                                 CHANGING ps_orderdetail.
+
+
+* 사원 이름 gt_orderdetail에 넣기.
+  PERFORM set_empna USING ps_orderdetail-empid
+                    CHANGING ps_orderdetail-empna.
+
+* 제품 이름 gt_orderdetail에 넣기.
+  PERFORM set_prdnm USING ps_orderdetail-prdid
+                    CHANGING ps_orderdetail-prdnm.
+
+
+* 제품 원가 gt_orderdetail에 넣기.
+  PERFORM set_prdco USING    ps_orderdetail-prdid
+                    CHANGING ps_orderdetail-prdco.
+
+* 각 제품별 총합 대입하기.
+  ps_orderdetail-sumal = ps_orderdetail-pdcnt * ps_orderdetail-prdco.
+  APPEND ps_orderdetail TO pt_orderdetail. " table에 수정 내용 대입.
+
+*alv에서 가져온 총 행들의 총 합을 구한 후, 스트럭쳐를 변경하고, db에 직접 반영하여, 구매오더의  총금액을 바꾸는 작업.
+  PERFORM set_totlp_db   USING ps_orderdetail
+                               pt_orderdetail
+                         CHANGING  zsess24001-totlp.
+
+*DB 반영하기 위해 field 들을 맞춰 주는 작업.
+  MOVE-CORRESPONDING ps_orderdetail TO ls_save.
+
+* DB에 insert
+  INSERT ztess2301 FROM ls_save.
+* Q. 지역변수처럼 form을 나가는 순간 사라질텐데 clear가 필요한가?
+  CLEAR : ps_orderdetail, ps_zsess23001.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_prbdt_datum
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS23001_PRBDT
+*&      <-- ZSESS23001_PRBDT
+*&---------------------------------------------------------------------*
+FORM set_prbdt_datum  USING    VALUE(p_prbdt) TYPE zsess23001-prbdt
+                      CHANGING     arg_prbdt TYPE zsess23001-prbdt.
+
+  CLEAR : p_prbdt.
+* prbdt에 sy-datum 적용.
+  p_prbdt = sy-datum.
+* Screen prbdt에 변수 값 적용.
+  arg_prbdt = p_prbdt.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_sumal_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL_PDCNT
+*&      --> PS_ORDERDETAIL_PRDCO
+*&      <-- PS_ORDERDETAIL_SUMAL
+*&---------------------------------------------------------------------*
+FORM set_sumal_data  USING    VALUE(ps_orderdetail)       TYPE zsess23001
+                     CHANGING       pt_orderdetail        TYPE ztess23001_h.
+
+  CLEAR : ps_orderdetail.
+
+* 해당 오더코드에 속한 오더상세코드들 각각에 대한 원가 총합을 구하는 로직. + internal table에 반영.
+  LOOP AT pt_orderdetail INTO ps_orderdetail.
+    ps_orderdetail-sumal = ps_orderdetail-pdcnt * ps_orderdetail-prdco. "원가의 총합 = 제품 갯수  * 제품원가
+
+    MODIFY pt_orderdetail FROM ps_orderdetail INDEX sy-tabix. "pt internal table에 수정된 원가의 총합을 반영하는 작업,
+    CLEAR : ps_orderdetail-pdcnt, ps_orderdetail-prdco, ps_orderdetail-sumal.
+    CLEAR : ps_orderdetail.
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_TOTLP_DB
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL
+*&      --> PT_ORDERDETAIL
+*&      <-- ZTESS2401
+*&---------------------------------------------------------------------*
+FORM set_totlp_db  USING    VALUE(ps_orderdetail) TYPE zsess23001
+                            VALUE(pt_orderdetail) TYPE ztess23001_h
+                   CHANGING      zsess24001_totlp TYPE zsess24001-totlp.
+
+
+  DATA : lv_cnt TYPE zsess23001-sumal.
+  DATA : lv_prhid TYPE zsess23001-prhid.
+  CLEAR : lv_cnt, lv_prhid, ps_orderdetail.
+
+  LOOP AT pt_orderdetail INTO ps_orderdetail.
+    lv_cnt += ps_orderdetail-sumal.
+    CLEAR : ps_orderdetail.
+  ENDLOOP.
+
+  lv_prhid = zsess24001-prhid. "구매오더코드 값을 변수에 넣어 Screan반영에 사용.
+  zsess24001_totlp = lv_cnt.
+
+*구매오더 코드의 DB에  총금액 field의 값을 수정하는 작업.
+  UPDATE ztess2401 SET totlp = lv_cnt WHERE prhid = lv_prhid.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_layout_orderdetail
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ZSESS23001
+*&      <-- PS_ORDERDETAIL
+*&---------------------------------------------------------------------*
+FORM set_layout_orderdetail  USING    VALUE(ps_zsess23001) TYPE zsess23001
+                             CHANGING       ps_orderdetail TYPE zsess23001.
+
+
+  CLEAR : ps_orderdetail.
+
+  ps_orderdetail-podid = ps_zsess23001-podid. " [C5SS] 구매오더상세코드
+  ps_orderdetail-prhid = ps_zsess23001-prhid. " [C5SS] 구매오더코드
+  ps_orderdetail-prdid = ps_zsess23001-prdid. " [C5SS] 제품코드
+  ps_orderdetail-pdcnt = ps_zsess23001-pdcnt. " [C5SS] 제품수량
+  ps_orderdetail-punit = ps_zsess23001-punit. " [C5SS] 수량단위
+  ps_orderdetail-prbdt = ps_zsess23001-prbdt. " [C5SS] 구매요청일자
+  ps_orderdetail-odchk = ps_zsess23001-odchk. " [C5SS] 담당자 승인 여부 {"T" : 승인 , "F" :  거절,  "N" : 승인 진행중}
+  ps_orderdetail-empid = ps_zsess23001-empid. " [C5SS] 사원코드
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form Before_Each_PRHID
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM before_each_prhid .
+
+*perform 처리 예정. => save하기 전에 채번하는 것이 원칙이다.
+* 구매오더 코드 자동 채번 알고리즘. "모듈안에서 선언되는 변수는 global로 선언.
+
+  DATA:
+    lv_year(4)  TYPE i, "년수 ex) 2020 , 2021, 2022 지금년도.
+    lv_char(8)  TYPE n, "뒤에 일련번호
+    lv_full(14) TYPE c. "전체 코드 == 결과 코드
+
+  DATA :
+    lv_vdata(14) TYPE c, "(비교대상) DB에 있는 최고 구매코드
+    lv_vnow(4)   TYPE c. "(비교대상) 지금 년도.
+
+  DATA : ls_orderdb TYPE ztess2401,
+         lv_data    TYPE ztess2401-prhid.
+  CLEAR : gv_id, lv_year,  lv_char, lv_full, lv_vdata, lv_vnow, lv_data.
+
+  SELECT SINGLE MAX( prhid )
+  INTO  lv_data
+  FROM ztess2401.
+
+  MOVE sy-datum(4) TO lv_year.
+  MOVE lv_data+6(8) TO lv_char. " 여기까지 채번의 최고숫자 입력 0000 0095.
+  MOVE lv_data TO lv_vdata. " LV_VdATA = 최고 구매오더코드"
+
+  lv_vnow = lv_year.
+
+  IF lv_vdata+2(4) EQ lv_vnow. " 현제db yymmdd = 지금 yymmdd
+
+    lv_char += 1.
+    lv_full = 'PO' && lv_year && lv_char.
+    gv_id = lv_full. " 자동 채번 번호 될 예정.
+
+* Structure 필드 추가 + alv 출력을 위한 gt_order에 data 적재.
+    PERFORM st_to_gtorder.
+
+* 주문내역 DB에 저장 전처리 과정.
+    PERFORM set_orderdb USING    zsess24003
+                        CHANGING ls_orderdb.
+
+* 주문내역 DB에 저장.
+    INSERT ztess2401 FROM ls_orderdb.
+    PERFORM message_prhid.
+
+
+  ELSE.
+    CLEAR : lv_char.
+    lv_char += 1.
+    lv_full = 'PO' && lv_year && lv_char.
+    gv_id = lv_full. " 자동 채번 될 예정.
+
+* Structure 필드 추가 + alv 출력을 위한 gt_order에 data 적재.
+    PERFORM st_to_gtorder.
+
+* 주문내역 DB에 저장 전처리 과정.
+    PERFORM set_orderdb USING    zsess24003
+                        CHANGING ls_orderdb.
+
+* 주문내역 DB에 저장.
+    INSERT ztess2401 FROM ls_orderdb.
+    PERFORM message_prhid.
+
+
+  ENDIF.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form Message_prhid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM message_prhid .
+
+  MESSAGE S000 WITH '저장이 완료 되었습니다!' && '당신의 구매오더코드는' && zsess24003-prhid && '입니다'.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form Before_Each_Pohid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM before_each_pohid USING    VALUE(ps_zsess23001) TYPE zsess23001
+                       CHANGING ps_zsess23001_podid TYPE zsess23001-podid
+                                ps_zsess23001_prbdt TYPE zsess23001-prbdt.
+
+
+
+
+*perform 처리 예정. => save하기 전에 채번하는 것이 원칙이다.
+* 구매오더 코드 자동 채번 알고리즘. "모듈안에서 선언되는 변수는 global로 선언.
+  CLEAR : zsess24003.
+
+  DATA:
+    lv_year(4)  TYPE i, "년수 ex) 2020 , 2021, 2022 지금년도.
+    lv_char(8)  TYPE n, "뒤에 일련번호
+    lv_full(14) TYPE c. "전체 코드 == 결과 코드
+
+  DATA :
+    lv_vdata(14) TYPE c, "(비교대상) DB에 있는 최고 구매코드
+    lv_vnow(4)   TYPE c. "(비교대상) 지금 년도.
+
+
+  DATA : lv_data TYPE ztess2301-podid.
+  CLEAR : gv_id, lv_year,  lv_char, lv_full, lv_vdata, lv_vnow.
+
+  SELECT SINGLE MAX( podid )
+  INTO  lv_data
+  FROM ztess2301.
+
+  MOVE sy-datum(4) TO lv_year.
+  MOVE lv_data+6(8) TO lv_char. " 여기까지 채번의 최고숫자 입력 0000 0095.
+
+  MOVE lv_data TO lv_vdata. " LV_VdATA = 최고 구매오더코드"
+
+  lv_vnow = lv_year.
+
+  IF lv_vdata+2(4) EQ lv_vnow. " 현제db yymmdd = 지금 yymmdd
+
+    lv_char += 1.
+    lv_full = 'PD' && lv_year && lv_char.
+    gv_id = lv_full. " 자동 채번 번호 될 예정.
+
+    ps_zsess23001_podid = gv_id.
+
+  ELSE.
+    CLEAR : lv_char.
+    lv_char += 1.
+    lv_full = 'PD' && lv_year && lv_char.
+    gv_id = lv_full. " 자동 채번 될 예정.
+    ps_zsess23001_podid = gv_id.
+
+  ENDIF.
+
+  ps_zsess23001_prbdt = sy-datum.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_empna
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL_EMPID
+*&      <-- PS_ORDERDETAIL_EMPNA
+*&---------------------------------------------------------------------*
+FORM set_empna  USING    VALUE(ps_orderdetail_empid) TYPE zsess23001-empid
+                CHANGING       ps_orderdetail_empna  TYPE zsess23001-empna.
+
+  DATA : lv_name  TYPE zsess24001-empna.
+  CLEAR : lv_name.
+
+  SELECT SINGLE empna
+  INTO lv_name
+  FROM ztess0301
+  WHERE empid = ps_orderdetail_empid.
+
+  ps_orderdetail_empna = lv_name. "ps_orderdetail의 사원 이름 field에 값 대입.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_prdnm
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL_PRDID
+*&      <-- PS_ORDERDETAIL_PRDNM
+*&---------------------------------------------------------------------*
+FORM set_prdnm  USING    VALUE(ps_orderdetail_prdid) TYPE zsess23001-prdid
+                CHANGING        ps_orderdetail_prdnm TYPE zsess23001-prdnm.
+
+  DATA : lv_prdnm TYPE zsess23001-prdnm.
+  CLEAR : lv_prdnm.
+
+*제품 이름 gt_orderdetail에 넣기.
+  SELECT SINGLE prdnm
+    INTO lv_prdnm
+    FROM ztess1601
+    WHERE prdid = ps_orderdetail_prdid.
+  ps_orderdetail_prdnm = lv_prdnm. "ps_orderdetail의 사원 이름 field에 값 대입.
+
+
+
+
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_prdco
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL_PRDID
+*&      <-- PS_ORDERDETAIL_PRDCO
+*&---------------------------------------------------------------------*
+FORM set_prdco  USING    ps_orderdetail_prdid
+                CHANGING ps_orderdetail_prdco.
+
+  DATA : lv_prdco TYPE zsess23001-prdco.
+  CLEAR : lv_prdco.
+
+  SELECT SINGLE prdco
+    INTO lv_prdco
+    FROM ztess1501
+    WHERE prdid = ps_orderdetail_prdid
+    AND valide = '99991231'.
+  ps_orderdetail_prdco = lv_prdco. "ps_orderdetail의 제품 원가 field에 값 대입.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_empna_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24003_EMPID
+*&      <-- ZSESS24003_EMPNA
+*&---------------------------------------------------------------------*
+FORM set_empna_data  USING    VALUE(pv_zsess24003_empid) TYPE zsess24003-empid
+                     CHANGING       pv_zsess24003_empna  TYPE zsess24003-empna.
+
+  DATA : lv_name  TYPE zsess24003-empna.
+  CLEAR : lv_name.
+
+  SELECT SINGLE empna
+  INTO lv_name
+  FROM ztess0301
+  WHERE empid = pv_zsess24003_empid.
+
+  pv_zsess24003_empna = lv_name. "ps_orderdetail의 사원 이름 field에 값 대입.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_pntnm_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24003_PNTID
+*&      <-- ZSESS24003_PNTNM
+*&---------------------------------------------------------------------*
+FORM set_pntnm_data  USING    VALUE(pv_zsess24003_pntid) TYPE zsess24003-pntid
+                     CHANGING       pv_zsess24003_pntnm  TYPE zsess24003-pntnm.
+
+
+  DATA : lv_name  TYPE zsess24003-pntnm.
+  CLEAR : lv_name.
+
+  SELECT SINGLE pntnm
+  INTO lv_name
+  FROM ztess2501
+  WHERE pntid = pv_zsess24003_pntid.
+
+  pv_zsess24003_pntnm = lv_name. "ps_orderdetail의 사원 이름 field에 값 대입.
+
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form st_to_gtorder
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM st_to_gtorder .
+
+*자동 채번된 값 zsess24003에 넣기
+  zsess24003-prhid = gv_id.
+* 사원 이름 zsess24003에  넣기.
+  PERFORM set_empna_data USING    zsess24003-empid
+                         CHANGING zsess24003-empna.
+
+* 공장 이름 zsess24003에  넣기
+  PERFORM set_pntnm_data USING    zsess24003-pntid
+                         CHANGING zsess24003-pntnm.
+
+*APPEND zsess24003 TO gt_order => Screen alv에 나오기 위해서.
+  CLEAR : gs_order.
+  MOVE-CORRESPONDING zsess24003 TO gs_order.
+  APPEND gs_order TO gt_order.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_crtdm
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24003_CRTDM
+*&      <-- ZSESS24003_CRTDM
+*&---------------------------------------------------------------------*
+FORM set_crtdm  USING    VALUE(p_zsess24003_crtdm) TYPE zsess24003-crtdm
+                CHANGING       p_zsess24003_crtdm2  TYPE zsess24003-crtdm.
+
+* 문서 생성일시 지금날짜 바로 적용.
+  p_zsess24003_crtdm2 = sy-datum.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_orderdb
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24003
+*&      <-- LS_ORDERDB
+*&---------------------------------------------------------------------*
+FORM set_orderdb  USING  VALUE(p_zsess24003) TYPE zsess24003
+                  CHANGING     p_ls_orderdb TYPE ztess2401.
+
+  CLEAR : p_ls_orderdb.
+  MOVE-CORRESPONDING p_zsess24003 TO p_ls_orderdb.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form setting_layout
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      <-- GS_LAYO
+*&---------------------------------------------------------------------*
+FORM setting_layout  CHANGING ps_layo TYPE lvc_s_layo.
+
+  ps_layo-zebra = 'X'.
+  ps_layo-cwidth_opt = 'X'.
+  ps_layo-stylefname = 'GS_CELLBTN'.
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form get_prhid_lt_order
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PV_PRHID_B
+*&      --> PV_PRHID_E
+*&      <-- LT_ORDER
+*&---------------------------------------------------------------------*
+FORM get_prhid_lt_order  USING    pv_prhid_b TYPE zsess24002-prhid_b
+                                  pv_prhid_e TYPE zsess24002-prhid_e
+                         CHANGING lt_order TYPE ztess2401_t.
+
+
+  SELECT *
+  FROM  ztess2401
+  INTO CORRESPONDING FIELDS OF TABLE lt_order
+  WHERE prhid BETWEEN pv_prhid_b AND pv_prhid_e.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_ltorder_plus
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> LS_ORDER
+*&      --> LT_ORDER
+*&      --> PS_ORDER
+*&      <-- PT_ORDER
+*&---------------------------------------------------------------------*
+FORM set_ltorder_plus  USING    ls_order TYPE ztess2401
+                                lt_order TYPE ztess2401_t
+                                ps_order TYPE zsess24001
+                       CHANGING pt_order TYPE ztess24001_h.
+
+
+  LOOP AT lt_order INTO ls_order.
+* 구매오더 table(ZTESS2401) 위탁공장 table(ZTESS2501) 사원 table(ZTESS0301)'
+* pt_order{'prhid', 'pntid', 'empid', 'title', 'prdat', 'crtdm', 'totlp', 'currc', 'odchk', 'pntnm' ,'empna'}
+    SELECT SINGLE a~prhid a~pntid a~empid a~title a~prdat a~crtdm a~totlp a~currc a~odchk b~pntnm c~empna
+      INTO CORRESPONDING FIELDS OF ps_order
+      FROM ztess2401 AS a
+      INNER JOIN ztess2501 AS b "구매오더 table 의 공장코드(pntid)를 통해 위탁공장의 이름(pntnm)을 가져온다.
+      ON a~pntid = b~pntid
+      INNER JOIN ztess0301 AS c "구매오더 table 의 사원코드(empid)를 통해 사원 이름(empid)을 가져온다.
+      ON a~empid = c~empid
+      WHERE prhid = ls_order-prhid. "sort 로도 사용 가능하다 (program에서 사용.)
+
+    APPEND ps_order TO pt_order.
+    CLEAR : ps_order, ls_order.
+    SORT pt_order BY prhid .
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form get_prhid_lt_order_2
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> pv_pntid
+*&      <-- LT_ORDER
+*&---------------------------------------------------------------------*
+FORM get_prhid_lt_order_2  USING    pv_pntid TYPE zsess24002-pntid
+                           CHANGING lt_order TYPE ztess2401_t.
+
+  SELECT *
+    FROM  ztess2401
+    INTO CORRESPONDING FIELDS OF TABLE lt_order
+    WHERE pntid = pv_pntid.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_edited_before_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GS_ROW
+*&      --> GT_ROWS
+*&      --> GT_ORDER
+*&      --> GS_ORDER
+*&      <-- ZSESS24001
+*&---------------------------------------------------------------------*
+FORM set_edited_before_data  USING    VALUE(ps_row)   TYPE lvc_s_row
+                                      VALUE(pt_rows)  TYPE lvc_t_row
+                                      VALUE(pt_order) TYPE ztess24001_h
+                                      VALUE(ps_order) TYPE zsess24004
+                             CHANGING zsess24004 TYPE zsess24004.
+
+
+
+  IF sy-subrc EQ 0.
+    LOOP AT pt_rows INTO ps_row.
+
+      READ TABLE pt_order INTO ps_order INDEX ps_row-index. "Screen 100의 검색버튼 작동 이후, ALV에서 선택한 값을 Screen 401에 미리 대입.
+
+      zsess24004-prhid = ps_order-prhid. " 구매오더코드
+      zsess24004-pntid = ps_order-pntid. " 공장코드
+      zsess24004-pntnm = ps_order-pntnm. " 공장명
+      zsess24004-empid = ps_order-empid. " 사원코드
+      zsess24004-empna = ps_order-empna. " 사원 이름
+      zsess24004-title = ps_order-title. " 제목
+      zsess24004-prdat = ps_order-prdat. " 발주일자
+      zsess24004-crtdm = ps_order-crtdm. " 문서생성일시
+      zsess24004-totlp = ps_order-totlp. " 총구매금액
+      zsess24004-currc = ps_order-currc. " 통화
+      zsess24004-odchk = ps_order-odchk. " 담당자 승인 여부
+
+    ENDLOOP.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_pntnm
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24004_PNTID
+*&      <-- ZSESS24004_PNTNM
+*&---------------------------------------------------------------------*
+FORM set_pntnm  USING    VALUE(pv_pntid) TYPE zsess24004-pntid
+                CHANGING pv_pntnm TYPE zsess24004-pntnm.
+
+
+  SELECT SINGLE pntnm
+    INTO pv_pntnm
+    FROM ztess2501
+    WHERE pntid = pv_pntid.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_empid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24004_EMPID
+*&      <-- ZSESS24004_EMPNA
+*&---------------------------------------------------------------------*
+FORM set_empid  USING    VALUE(pv_empid) TYPE zsess24004-empid
+                CHANGING       pv_empna  TYPE zsess24004-empna.
+
+  SELECT SINGLE empna
+  INTO pv_empna
+  FROM ztess0301
+  WHERE empna = pv_empid.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_save_data_0401
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24004
+*&      <-- GT_ORDER
+*&      <-- ZTESS2401
+*&---------------------------------------------------------------------*
+FORM set_save_data_0401  USING    VALUE(zsess24004) TYPE zsess24004
+                         CHANGING       gt_order    TYPE ztess24001_h.
+
+  DATA : lt_data   TYPE TABLE OF zsess24001,
+         ls_data   TYPE zsess24001,
+         ls_dbdata TYPE ztess2401.
+
+  CLEAR : lt_data, ls_data, ls_dbdata.
+
+  MOVE-CORRESPONDING zsess24004 TO ls_data.
+
+* internal table 수정
+  MODIFY TABLE gt_order FROM ls_data.
+  CLEAR : ls_data.
+
+* layout의 structure의 내용을 db에 반영.
+  MOVE-CORRESPONDING zsess24004 TO ls_dbdata.
+
+*DB 반영. update 문으로 변경해보기.
+  MODIFY ztess2401 FROM ls_dbdata.
+  CLEAR : ls_dbdata.
+
+  IF sy-subrc EQ 0.
+    MESSAGE s002.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_prhid_data_0301
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS24003_PRHID
+*&      --> GS_ORDERDETAIL
+*&      <-- GT_ORDERDETAIL
+*&---------------------------------------------------------------------*
+FORM set_prhid_data_0301  USING    VALUE(zsess24003_prhid) TYPE zsess24003-prhid
+                                   VALUE(ps_orderdetail)   TYPE zsess23001
+                          CHANGING pt_orderdetail TYPE ztess23001_h.
+
+  SELECT a~podid "구매오더상세코드
+         a~prhid
+         a~prdid
+         a~pdcnt
+         a~punit
+         a~prbdt
+         a~odchk
+         a~empid
+         b~prdnm  "제품이름
+         c~empna  "사원이름
+         d~prdco  "제품 원가
+   INTO CORRESPONDING FIELDS OF TABLE pt_orderdetail
+   FROM ztess2301 AS a       " 구매오더 상세 TABLE
+   INNER JOIN ztess1601 AS b " 제품 TABLE
+   ON a~prdid = b~prdid      " 제품코드 비교 join 해서 '제품 이름'을 얻는 목적
+   INNER JOIN ztess0301 AS c " 사원 TABLE
+   ON a~empid = c~empid      " 사원코드 비교 join 해서 '사원 이름'을 얻는 목적
+   INNER JOIN ztess1501 AS d " 제품 원가 이력 TABLE
+   ON a~prdid = d~prdid     "제품코드가 같고 만료일자가 9999-12-31인 조건을 비교해서 '제품 원가를 얻는 목적'
+   AND d~valide = '99991231'
+   WHERE prhid = zsess24003_prhid "스크린의 오더코드와,  똑같은 오더코드를 가지고 있는 데이터를 DB에서가져와 주세요.
+   ORDER BY podid. " 구매오더상세코드를 기준으로 오름차순 해주세요.
+
+  " 해당 오더코드에 속한 오더상세코드들 각각에 대한 원가 총합을 구하는 로직 + internal table 업데이트,  NOT DB반영.
+  PERFORM set_sumal_data USING    ps_orderdetail
+                         CHANGING pt_orderdetail.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_orderdetail_data
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> GS_ROW
+*&      --> GT_ROWS
+*&      --> GT_ORDERDETAIL
+*&      --> GS_ORDERDETAIL
+*&      <-- ZSESS23002
+*&---------------------------------------------------------------------*
+FORM set_orderdetail_data  USING    VALUE(gs_row)         TYPE lvc_s_row
+                                    VALUE(gt_rows)        TYPE lvc_t_row
+                                    VALUE(gt_orderdetail) TYPE ztess23001_h
+                                    VALUE(gs_orderdetail) TYPE zsess23001
+                           CHANGING zsess23002 TYPE zsess23002.
+
+
+  LOOP AT gt_rows INTO gs_row.
+    READ TABLE gt_orderdetail INTO gs_orderdetail INDEX gs_row-index.
+
+    zsess23001-prhid = gs_orderdetail-prhid.
+    zsess23001-empid = gs_orderdetail-empid.
+    zsess23001-pdcnt = gs_orderdetail-pdcnt.
+    zsess23001-podid = gs_orderdetail-podid.
+    zsess23001-prbdt = gs_orderdetail-prbdt.
+    zsess23001-prdid = gs_orderdetail-prdid.
+    zsess23001-punit = gs_orderdetail-punit.
+
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_selected_rows_200
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_selected_rows_200 .
+
+  CLEAR : gt_rows, gs_row.
+
+  CALL METHOD gcl_alv_grid200->get_selected_rows
+    IMPORTING
+      et_index_rows = gt_rows.
+
+
+  IF gt_rows IS INITIAL.
+    MESSAGE e000 WITH '행을 선택해주세요.'.
+    RETURN.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_totlp_db_0401
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL
+*&      --> PT_ORDERDETAIL
+*&      <-- ZSESS24001_TOTLP
+*&---------------------------------------------------------------------*
+FORM set_totlp_db_0401  USING    VALUE(ps_orderdetail) TYPE zsess23001
+                                 VALUE(pt_orderdetail) TYPE ztess23001_h
+                        CHANGING p_zsess24001_totlp TYPE zsess24001-totlp.
+
+  DATA : lv_cnt TYPE zsess23001-sumal.
+  DATA : lv_prhid TYPE zsess23001-prhid.
+  CLEAR : lv_cnt, lv_prhid, ps_orderdetail.
+
+  LOOP AT pt_orderdetail INTO ps_orderdetail.
+    lv_cnt += ps_orderdetail-sumal.
+    CLEAR : ps_orderdetail.
+  ENDLOOP.
+
+  lv_prhid = zsess24001-prhid. "구매오더코드 값을 변수에 넣어 Screan반영에 사용.
+  p_zsess24001_totlp = lv_cnt.
+
+*구매오더 코드의 DB에  총금액 field의 값을 수정하는 작업.
+  UPDATE ztess2401 SET totlp = lv_cnt WHERE prhid = lv_prhid.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_detail_ndata_400
+*&---------------------------------------------------------------------*
+*& text 구매오더상세코드 저장
+*&---------------------------------------------------------------------*
+*&      --> ZSESS23001
+*&      --> GS_ORDERDETAIL
+*&      <-- GT_ORDERDETAIL
+*&---------------------------------------------------------------------*
+FORM set_detail_ndata_400  USING    VALUE(ps_zsess23001)   TYPE zsess23001
+                                    VALUE(ps_orderdetail) TYPE zsess23001
+                           CHANGING        pt_orderdetail TYPE ztess23001_h
+                                           zsess24001     TYPE zsess24001.
+
+
+  DATA : ls_save TYPE ztess2301,
+         lt_save TYPE TABLE OF ztess2301.
+
+  DATA : ls_tmp TYPE zsess23001.
+
+  CLEAR : ls_save.
+  REFRESH : lt_save.
+
+  ps_zsess23001-prbdt = sy-datum.
+
+* Screen layout 에서 입력된 변수를 structure에 저장.
+  PERFORM set_layout_orderdetail USING    ps_zsess23001
+                                 CHANGING ps_orderdetail.
+
+
+* 사원 이름 gt_orderdetail에 넣기.
+  PERFORM set_empna USING ps_orderdetail-empid
+                    CHANGING ps_orderdetail-empna.
+
+* 제품 이름 gt_orderdetail에 넣기.
+  PERFORM set_prdnm USING ps_orderdetail-prdid
+                    CHANGING ps_orderdetail-prdnm.
+
+
+* 제품 원가 gt_orderdetail에 넣기.
+  PERFORM set_prdco USING    ps_orderdetail-prdid
+                    CHANGING ps_orderdetail-prdco.
+
+* 각 제품별 총합 대입하기.
+  ps_orderdetail-sumal = ps_orderdetail-pdcnt * ps_orderdetail-prdco.
+
+  READ TABLE pt_orderdetail INTO ls_tmp WITH KEY podid = ps_orderdetail-podid.
+  ls_tmp = ps_orderdetail . " table에 수정 내용 대입.
+
+  MODIFY TABLE pt_orderdetail FROM ls_tmp.
+
+
+*alv에서 가져온 총 행들의 총 합을 구한 후, 스트럭쳐를 변경하고, db에 직접 반영하여, 구매오더의  총금액을 바꾸는 작업.
+  PERFORM set_totlp_db_400   USING ps_orderdetail
+                                   pt_orderdetail
+                         CHANGING  zsess24001-totlp.
+
+*DB 반영하기 위해 field 들을 맞춰 주는 작업.
+  MOVE-CORRESPONDING ps_orderdetail TO ls_save.
+
+* DB에 insert
+  MODIFY ztess2301 FROM ls_save.
+* Q. 지역변수처럼 form을 나가는 순간 사라질텐데 clear가 필요한가?
+
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form get_pdname_400
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS23001_PRDID
+*&      <-- ZSESS23001_PRDNM
+*&---------------------------------------------------------------------*
+FORM get_pdname_400  USING    VALUE(zsess23001_prdid) TYPE zsess23001-prdid
+                     CHANGING zsess23001_prdnm.
+
+  DATA : lv_pdname TYPE zsess23001-prdnm.
+  CLEAR : lv_pdname.
+
+  SELECT SINGLE prdnm
+    INTO lv_pdname
+    FROM ztess1601
+    WHERE prdid = zsess23001_prdid.
+
+  zsess23001_prdnm = lv_pdname.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form get_username_400
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> ZSESS23001_EMPID
+*&      <-- ZSESS23001_EMPNA
+*&---------------------------------------------------------------------*
+FORM get_username_400  USING    VALUE(zsess23001_empid) TYPE zsess23001-empid
+                       CHANGING       zsess23001_empna  TYPE zsess23001-empna.
+
+  DATA : lv_username TYPE zsess23001-empna.
+  CLEAR : lv_username.
+
+  SELECT SINGLE empna
+    INTO lv_username
+    FROM ztess0301
+    WHERE empid = zsess23001_empid.
+
+  zsess23001_empna = lv_username.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form f4_prdid
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM f4_prdid .
+
+  DATA : BEGIN OF ls_value,
+           prdid TYPE ztess1601-prdid,
+           prdnm TYPE ztess1601-prdnm,
+         END OF ls_value,
+
+         lt_value LIKE TABLE OF ls_value.
+
+  SELECT prdid prdnm
+    INTO CORRESPONDING FIELDS OF TABLE lt_value
+    FROM ztess1601
+    WHERE prdid LIKE 'SSINSA%'.
+
+  IF sy-subrc NE 0.
+
+    MESSAGE s001.
+    EXIT.
+
+  ENDIF.
+
+  CALL FUNCTION 'F4IF_INT_TABLE_VALUE_REQUEST'
+    EXPORTING
+      retfield        = 'PRDID'
+      dynpprog        = sy-repid
+      dynpnr          = sy-dynnr
+      dynprofield     = 'ZSESS23001-PRDID'
+      window_title    = '삽신사코드가 가지고 있는 스트럭쳐 가져오기'
+      value_org       = 'S'
+    TABLES
+      value_tab       = lt_value
+*     RETURN_TAB      =
+    EXCEPTIONS
+      parameter_error = 1
+      no_values_found = 2
+      OTHERS          = 3.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Form set_totlp_db_400
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*&      --> PS_ORDERDETAIL
+*&      --> PT_ORDERDETAIL
+*&      <-- ZSESS24001_TOTLP
+*&---------------------------------------------------------------------*
+FORM set_totlp_db_400  USING    VALUE(ps_orderdetail)   TYPE zsess23001
+                                VALUE(pt_orderdetail)   TYPE ztess23001_h
+                       CHANGING       zsess24001_totlp  TYPE zsess24001-totlp.
+
+  DATA : lv_cnt TYPE zsess23001-sumal.
+  DATA : lv_prhid TYPE zsess23001-prhid.
+  CLEAR : lv_cnt, lv_prhid, ps_orderdetail.
+
+  LOOP AT pt_orderdetail INTO ps_orderdetail.
+    lv_cnt += ps_orderdetail-sumal.
+    CLEAR : ps_orderdetail.
+  ENDLOOP.
+
+  lv_prhid = zsess24001-prhid. "구매오더코드 값을 변수에 넣어 Screan반영에 사용.
+  zsess24001_totlp = lv_cnt.
+
+*구매오더 코드의 DB에  총금액 field의 값을 수정하는 작업.
+  UPDATE ztess2401 SET totlp = lv_cnt WHERE prhid = lv_prhid.
+
+ENDFORM.

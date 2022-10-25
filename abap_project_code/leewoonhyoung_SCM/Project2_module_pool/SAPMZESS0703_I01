@@ -1,0 +1,367 @@
+*&---------------------------------------------------------------------*
+*& Include          SAPMZESS0703_I01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  CASE ok_code.
+    WHEN 'BACK'.
+      CLEAR ok_code.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SEARCH'.
+      CLEAR ok_code.
+      "Search 버튼 클릭시 조건에 맞는 데이터 alv에 전달
+      PERFORM set_data USING gs_order
+                             zsess24002-prhid_b
+                             zsess24002-prhid_e
+                             zsess24002-pntid
+                       CHANGING gt_order.
+      gi_return = 'X'. "SET_STATUS 설정.
+
+    WHEN 'DETAIL'.
+      CLEAR ok_code.
+
+      "Search실행 후  ALV 클릭시 해당 행에 저장되어 있는 index 가져오기.
+      PERFORM set_selected_rows.
+
+      "ALV index에 해당하는 DATA를 SCREEN200 구매오더상세DATA로 미리 탑재.
+      PERFORM set_detail_data USING    gs_row
+                                       gt_rows
+                                       gt_order
+                                       gs_order
+                              CHANGING zsess24001.
+      CALL SCREEN 200.
+
+    WHEN 'CREATE'.
+      CLEAR ok_code.
+      CALL SCREEN 301.
+
+    WHEN 'EDIT'.
+      CLEAR ok_code.
+      "Search실행 후  ALV 클릭시 해당 행에 저장되어 있는 index 가져오기.
+      PERFORM set_selected_rows.
+
+      PERFORM set_edited_before_data USING    gs_row
+                                              gt_rows
+                                              gt_order
+                                              gs_order
+                                     CHANGING zsess24004.
+      CALL  SCREEN 401.
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv. "alv + container 제거.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  VALIDATION_100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE validation_100 INPUT.
+
+* Screen 100번의 구매오더코드 왼쪽 조건과 오른쪽 조건에 대한 validation.
+  PERFORM validation_prhid USING  zsess24002-prhid_b
+                                  zsess24002-prhid_e.
+
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0200 INPUT.
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv_200. "alv + container 제거.
+      PERFORM set_data USING gs_order
+                       zsess24002-prhid_b
+                       zsess24002-prhid_e
+                       zsess24002-pntid
+                 CHANGING gt_order.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0200  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0200 INPUT.
+
+  CASE ok_code.
+    WHEN 'DETAIL'.
+      CLEAR ok_code.
+
+    WHEN 'CREATE'.
+      CLEAR ok_code.
+
+      CLEAR :zsess23001.
+
+*     구매오더상세 화면 구매오더코드 세팅
+      PERFORM set_orderdetail_prhid USING    zsess24001-prhid
+                                    CHANGING zsess23001-prhid.
+
+*     구매오더상세 화면 문서발행일자 세팅
+      PERFORM set_prbdt_datum  USING    zsess23001-prbdt
+                               CHANGING zsess23001-prbdt.
+
+      CALL SCREEN 300.
+
+    WHEN 'BACK'.
+      CLEAR : ok_code.
+*     업데이트된 gt_order data를 넣는다.
+      PERFORM set_data USING gs_order
+                             zsess24002-prhid_b
+                             zsess24002-prhid_e
+                             zsess24002-pntid
+                       CHANGING gt_order.
+      LEAVE TO SCREEN 0.
+    WHEN 'EDIT'.
+      PERFORM set_selected_rows_200.
+
+      "ALV index에 해당하는 DATA를 SCREEN200 구매오더상세DATA로 미리 탑재.
+      PERFORM set_orderdetail_data USING    gs_row
+                                            gt_rows
+                                            gt_orderdetail
+                                            gs_orderdetail
+                                   CHANGING zsess23002.
+
+      CALL SCREEN 400.
+
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0300  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0300 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      CLEAR ok_code.
+      LEAVE TO SCREEN 0.
+    WHEN 'SAVE'.
+*     데이터 저장시 주문상세table(ztess2301) insert + alv 내용 추가.
+      PERFORM set_detail_ndata USING    zsess23001
+                                        gs_orderdetail
+                               CHANGING gt_orderdetail.
+
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0300  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0300 INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv_200. "alv + container 제거.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0301  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0301 INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0301  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0301 INPUT.
+
+  CASE ok_code.
+    WHEN 'SAVE'.
+      CLEAR ok_code.
+      " 저장하는 시점에 구매오더상세코드 생성이 되어야 한다.
+      " TODO Screen 에서 구매오더 상세코드지우기
+*     구매오더 자동 채번 기능
+      PERFORM before_each_prhid.
+
+*        PERFORM set_prhid_data_0301 USING      zsess24003-prhid
+*                                               gs_orderdetail
+*                                    CHANGING   gt_orderdetail.
+
+
+*      zsess24003-prhid
+      clear : zsess24001.
+
+      zsess24001-prhid = zsess24003-prhid.
+      zsess24001-pntid = zsess24003-pntid. " 공장코드
+      zsess24001-pntnm = zsess24003-pntnm. " 공장명
+      zsess24001-empid = zsess24003-empid. " 사원코드
+      zsess24001-empna = zsess24003-empna. " 사원 이름
+      zsess24001-title = zsess24003-title. " 제목
+      zsess24001-prdat = zsess24003-prdat. " 발주일자
+      zsess24001-crtdm = zsess24003-crtdm. " 문서생성일시
+      zsess24001-totlp = zsess24003-totlp. " 총구매금액
+      zsess24001-currc = zsess24003-currc. " 통화
+      zsess24001-odchk = zsess24003-odchk. " 담당자 승인 여부
+      call SCREEN 200.
+
+
+
+    WHEN 'BACK'.
+      CLEAR ok_code.
+      LEAVE TO SCREEN 0.
+    WHEN OTHERS.
+  ENDCASE.
+
+
+ENDMODULE.
+
+
+*&SPWIZARD: INPUT MODULE FOR TS 'MYTAB'. DO NOT CHANGE THIS LINE!
+*&SPWIZARD: GETS ACTIVE TAB
+MODULE mytab_active_tab_get INPUT.
+  ok_code = sy-ucomm.
+  CASE ok_code.
+    WHEN c_mytab-tab1.
+      g_mytab-pressed_tab = c_mytab-tab1.
+    WHEN c_mytab-tab2.
+      g_mytab-pressed_tab = c_mytab-tab2.
+    WHEN c_mytab-tab3.
+      g_mytab-pressed_tab = c_mytab-tab3.
+    WHEN OTHERS.
+*&SPWIZARD:      DO NOTHING
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  EXIT_0400  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE exit_0400 INPUT.
+
+  CASE ok_code.
+    WHEN 'EXIT'.
+      LEAVE PROGRAM.
+    WHEN 'CANC'.
+      PERFORM clear_alv_200.
+      PERFORM set_data USING gs_order
+                 zsess24002-prhid_b
+                 zsess24002-prhid_e
+                 zsess24002-pntid
+           CHANGING gt_order.
+      LEAVE TO SCREEN 0.
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0401  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0401 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      PERFORM set_data USING gs_order
+                       zsess24002-prhid_b
+                       zsess24002-prhid_e
+                       zsess24002-pntid
+                 CHANGING gt_order.
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SAVE'.
+
+      PERFORM set_save_data_0401 USING    zsess24004
+                                 CHANGING gt_order.
+
+
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0400  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0400 INPUT.
+
+  CASE ok_code.
+    WHEN 'BACK'.
+      CLEAR : ok_code.
+
+
+
+
+      LEAVE TO SCREEN 0.
+
+    WHEN 'SAVE'.
+
+      PERFORM set_detail_ndata_400 USING    zsess23001
+                                            gs_orderdetail
+                                   CHANGING gt_orderdetail
+                                            zsess24001.
+
+
+
+
+
+
+
+
+
+
+  ENDCASE.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  F4_PRDID  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE f4_prdid INPUT.
+
+  PERFORM f4_prdid.
+
+ENDMODULE.

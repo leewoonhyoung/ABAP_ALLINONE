@@ -1,0 +1,56 @@
+*&---------------------------------------------------------------------*
+*& Include SAPMZESS0703_TOP                         - Module Pool      SAPMZESS0703
+*&---------------------------------------------------------------------*
+PROGRAM sapmzess0703 MESSAGE-ID zmcess.
+
+" ztess2401 table type => ZTESS2401_T
+
+TABLES : zsess24001, "Screen 100의 fieldCatelog.       #ztess24001_h => table type.
+         zsess24002, "Screen 100의  Condition.
+         zsess23001, "Screen 300의 생성                 #ztess23001_h
+         zsess24003, "Screen 301 구매오더 생성화면 Structure.
+         zsess24004, "Screen 401 구매오더 생성화면 Strucutre.
+         zsess23002. "Screen 400 구매오더상세 수정화면 Structure.
+*개별 변수 설정.
+DATA : gs_order       TYPE zsess24001, "Screen 100 구매오더 Structure
+       gt_order       TYPE TABLE OF zsess24001, "Screen 100 구매오더 Table
+       gs_orderdetail TYPE zsess23001, "Screen 200 구매상세오더 Sturcutre
+       gt_orderdetail TYPE TABLE OF zsess23001. "Screen 200 구매상세오더 Table
+
+
+
+*ALV 세팅.
+DATA : gcl_container    TYPE REF TO cl_gui_custom_container,
+       gcl_container200 TYPE REF TO cl_gui_custom_container,
+       gcl_alv_grid     TYPE REF TO cl_gui_alv_grid,
+       gcl_alv_grid200  TYPE REF TO cl_gui_alv_grid,
+       ok_code          TYPE        sy-ucomm,
+       gs_layo          TYPE        lvc_s_layo,
+       gs_fcat          TYPE        lvc_s_fcat, "Screen 100
+       gt_fcat          TYPE        lvc_t_fcat, "Screen 100
+       gs_fcat200       TYPE        lvc_s_fcat, "Screen 200
+       gt_fcat200       TYPE        lvc_t_fcat, "Screen 200
+       gt_rows          TYPE        lvc_t_row,
+       gs_row           TYPE        lvc_s_row,
+       gt_cellbtn       TYPE        lvc_t_styl,
+       gs_cellbtn       TYPE        lvc_s_styl.
+
+*ST_STATUS 조작 변수.
+DATA : gi_return(1) TYPE c.
+
+*Calculator Algorithm val.
+DATA : gv_id(14) TYPE c. "구매오더코드 자동 채번 알고리즘 변수.
+
+*&SPWIZARD: FUNCTION CODES FOR TABSTRIP 'MYTAB'
+CONSTANTS: BEGIN OF C_MYTAB,
+             TAB1 LIKE SY-UCOMM VALUE 'MYTAB_FC1',
+             TAB2 LIKE SY-UCOMM VALUE 'MYTAB_FC2',
+             TAB3 LIKE SY-UCOMM VALUE 'MYTAB_FC3',
+           END OF C_MYTAB.
+*&SPWIZARD: DATA FOR TABSTRIP 'MYTAB'
+CONTROLS:  MYTAB TYPE TABSTRIP.
+DATA:      BEGIN OF G_MYTAB,
+             SUBSCREEN   LIKE SY-DYNNR,
+             PROG        LIKE SY-REPID VALUE 'SAPMZESS0703',
+             PRESSED_TAB LIKE SY-UCOMM VALUE C_MYTAB-TAB1,
+           END OF G_MYTAB.

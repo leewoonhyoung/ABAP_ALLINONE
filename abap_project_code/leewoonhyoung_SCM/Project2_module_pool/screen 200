@@ -1,0 +1,8 @@
+PROCESS BEFORE OUTPUT.
+ MODULE STATUS_0200.
+ MODULE set_layo_fcat_200.  "fieldcatelog 커스텀마이징.
+ MODULE set_display_200.    "전처리 작업 + container, alv_grid 생성
+
+PROCESS AFTER INPUT.
+ MODULE USER_COMMAND_0200.
+ MODULE exit_0200 AT EXIT-COMMAND.

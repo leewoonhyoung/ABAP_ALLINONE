@@ -1,0 +1,25 @@
+PROCESS BEFORE OUTPUT.
+*&SPWIZARD: PBO FLOW LOGIC FOR TABSTRIP 'MYTAB'
+  MODULE MYTAB_ACTIVE_TAB_SET.
+
+  CALL SUBSCREEN MYTAB_SCA INCLUDING G_MYTAB-PROG G_MYTAB-SUBSCREEN.
+
+  MODULE status_0100.
+  MODULE set_layo_fcat. "fieldcatelog 커스텀마이징.
+  MODULE set_display.   "전처리 작업 + container, alv_grid 생성
+*
+PROCESS AFTER INPUT.
+*&SPWIZARD: PAI FLOW LOGIC FOR TABSTRIP 'MYTAB'
+  CALL SUBSCREEN MYTAB_SCA.
+  MODULE MYTAB_ACTIVE_TAB_GET.
+
+  MODULE exit AT EXIT-COMMAND.
+
+* TODO 조건값을 모두 지웠을떄 생성이 가능하도록logic 짜기.
+
+*  CHAIN.
+*    FIELD : zsess24002-prhid_b, zsess24002-prhid_e.
+*    MODULE validation_100. "조건이 빈 값일때 message 처리.
+*  ENDCHAIN.
+
+  MODULE user_command_0100.

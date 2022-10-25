@@ -1,0 +1,323 @@
+*&---------------------------------------------------------------------*
+*& Include          SAPMZESS0703_O01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*& Module STATUS_0100 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0100 OUTPUT.
+
+  DATA: fcode TYPE STANDARD TABLE OF sy-ucomm.
+  APPEND 'DETAIL' TO fcode.
+  APPEND 'EDIT'   TO fcode.
+
+  IF gi_return IS INITIAL. "Condition of display or Hide
+
+    SET PF-STATUS 'S0100' EXCLUDING fcode.
+  ELSE.
+    SET PF-STATUS 'S0100'.
+  ENDIF.
+
+  SET TITLEBAR 'T0100'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_LAYO_FCAT OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_layo_fcat OUTPUT.
+
+  IF gt_fcat IS INITIAL.
+    PERFORM set_fcat_layout.
+
+  ENDIF.
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_DISPLAY OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_display OUTPUT.
+
+  "Screen 100번 container setting
+  PERFORM set_container_100.
+
+  "Screen 100번 alv_grid setting
+  PERFORM set_alv_grid_100.
+
+*  Screen 100번 gcl_alv_grid->set_table_for_first_display
+  PERFORM set_first_display_100.
+
+
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Form set_container_100
+*&---------------------------------------------------------------------*
+*& text
+*&---------------------------------------------------------------------*
+*& -->  p1        text
+*& <--  p2        text
+*&---------------------------------------------------------------------*
+FORM set_container_100 .
+
+*container 생성
+  IF gcl_container IS NOT BOUND.
+    CREATE OBJECT gcl_container
+      EXPORTING
+*       parent                      =                  " Parent container
+        container_name              = 'CON1'                 " Name of the Screen CustCtrl Name to Link Container To
+*       style                       =                  " Windows Style Attributes Applied to this Container
+*       lifetime                    = lifetime_default " Lifetime
+*       repid                       =                  " Screen to Which this Container is Linked
+*       dynnr                       =                  " Report To Which this Container is Linked
+*       no_autodef_progid_dynnr     =                  " Don't Autodefined Progid and Dynnr?
+      EXCEPTIONS
+        cntl_error                  = 1                " CNTL_ERROR
+        cntl_system_error           = 2                " CNTL_SYSTEM_ERROR
+        create_error                = 3                " CREATE_ERROR
+        lifetime_error              = 4                " LIFETIME_ERROR
+        lifetime_dynpro_dynpro_link = 5                " LIFETIME_DYNPRO_DYNPRO_LINK
+        OTHERS                      = 6.
+    IF sy-subrc <> 0.
+*     MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*       WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0200 OUTPUT.
+  SET PF-STATUS 'S0200'.
+  SET TITLEBAR 'T0200'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_LAYO_FCAT_200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_layo_fcat_200 OUTPUT.
+  IF gt_fcat200 IS INITIAL.
+    PERFORM set_fcat_layout_200.
+
+  ENDIF.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_DISPLAY_200 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_display_200 OUTPUT.
+
+* ALV 전처리 data Setting. //todo perform 전체 생성 .
+
+*구매오더코드를 Screen에서 1개 받아와서, 종속된 구매오더상세코드들을 pt_orderdetail에 넣는  sql.
+  PERFORM set_prhid_data USING      zsess24001-prhid
+                                    gs_orderdetail
+                         CHANGING   gt_orderdetail.
+
+
+  "Screen 200번 container setting
+  PERFORM set_container_200.
+
+  "Screen 200번 alv_grid setting
+  PERFORM set_alv_grid_200.
+
+*  Screen 200번 gcl_alv_grid->set_table_for_first_display
+  PERFORM set_first_display_200.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0300 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0300 OUTPUT.
+  SET PF-STATUS 'S0300'.
+  SET TITLEBAR 'T0300'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_DISPLAY_300 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_display_300 OUTPUT.
+
+* ALV SETTING은 200번 Screen을 공유한다.
+  "Screen 200번 container setting
+  PERFORM set_container_200.
+
+  "Screen 200번 alv_grid setting
+  PERFORM set_alv_grid_200.
+
+*  Screen 200번 gcl_alv_grid->set_table_for_first_display
+  PERFORM set_first_display_200.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0301 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0301 OUTPUT.
+  SET PF-STATUS 'S0301'.
+  SET TITLEBAR 'T0301'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module BEFORE_EACH OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE before_each OUTPUT.
+
+
+*perform 처리 예정. => save하기 전에 채번하는 것이 원칙이다.
+* 구매오더 코드 자동 채번 알고리즘. "모듈안에서 선언되는 변수는 global로 선언.
+  CLEAR : zsess24003.
+
+  DATA:
+    lv_year(4)  TYPE i, "년수 ex) 2020 , 2021, 2022 지금년도.
+    lv_char(8)  TYPE n, "뒤에 일련번호
+    lv_full(14) TYPE c. "전체 코드 == 결과 코드
+
+  DATA :
+    lv_vdata(14) TYPE c, "(비교대상) DB에 있는 최고 구매코드
+    lv_vnow(4)   TYPE c. "(비교대상) 지금 년도.
+
+
+  DATA : lv_data TYPE ztess2401-prhid.
+  CLEAR : gv_id, lv_year,  lv_char, lv_full, lv_vdata, lv_vnow.
+
+  SELECT SINGLE MAX( prhid )
+  INTO  lv_data
+  FROM ztess2401.
+
+  MOVE sy-datum(4) TO lv_year.
+  MOVE lv_data+6(8) TO lv_char. " 여기까지 채번의 최고숫자 입력 0000 0095.
+
+  MOVE lv_data TO lv_vdata. " LV_VdATA = 최고 구매오더코드"
+
+  lv_vnow = lv_year.
+
+  IF lv_vdata+2(4) EQ lv_vnow. " 현제db yymmdd = 지금 yymmdd
+
+    lv_char += 1.
+    lv_full = 'PO' && lv_year && lv_char.
+    gv_id = lv_full. " 자동 채번 번호 될 예정.
+
+    zsess24003-prhid = gv_id.
+
+  ELSE.
+    CLEAR : lv_char.
+    lv_char += 1.
+    lv_full = 'PO' && lv_year && lv_char.
+    gv_id = lv_full. " 자동 채번 될 예정.
+    zsess24003-prhid = gv_id.
+
+  ENDIF.
+
+
+  zsess24003-crtdm = sy-datum.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module BEFORE_EACH_300 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE before_each_300 OUTPUT.
+
+  PERFORM set_crtdm USING     zsess24003-crtdm
+                    CHANGING  zsess24003-crtdm.
+
+ENDMODULE.
+
+
+
+*&SPWIZARD: OUTPUT MODULE FOR TS 'MYTAB'. DO NOT CHANGE THIS LINE!
+*&SPWIZARD: SETS ACTIVE TAB
+MODULE mytab_active_tab_set OUTPUT.
+
+  mytab-activetab = g_mytab-pressed_tab.
+
+  CASE g_mytab-pressed_tab.
+    WHEN c_mytab-tab1.
+      g_mytab-subscreen = '0107'.
+    WHEN c_mytab-tab2.
+      g_mytab-subscreen = '0108'.
+    WHEN c_mytab-tab3.
+      g_mytab-subscreen = '0109'.
+    WHEN OTHERS.
+*&SPWIZARD:      DO NOTHING
+  ENDCASE.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module BF_LAYOUT_401 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE bf_layout_401 OUTPUT.
+
+* 공장코드를 가지고 공장 이름을 가져오는 로직.
+  PERFORM set_pntnm  USING    zsess24004-pntid
+                     CHANGING zsess24004-pntnm.
+*사원코드를 가지고 사원 이름을 가져오는 로직.
+  PERFORM set_empid  USING    zsess24004-empid
+                     CHANGING zsess24004-empna.
+
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0401 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0401 OUTPUT.
+  SET PF-STATUS 'S0401'.
+  SET TITLEBAR 'T0401'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module STATUS_0400 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE status_0400 OUTPUT.
+  SET PF-STATUS 'S0400'.
+  SET TITLEBAR 'T0400'.
+ENDMODULE.
+*&---------------------------------------------------------------------*
+*& Module SET_BEFOREEACH_400 OUTPUT
+*&---------------------------------------------------------------------*
+*&
+*&---------------------------------------------------------------------*
+MODULE set_beforeeach_400 OUTPUT.
+
+
+  PERFORM get_pdname_400 using    zsess23001-prdid
+                         CHANGING zsess23001-prdnm.
+
+  PERFORM get_username_400 USING    zsess23001-empid
+                           CHANGING zsess23001-empna.
+
+
+*    DATA : lv_username TYPE zsess23001-empna.
+*    CLEAR : lv_username.
+*
+*    SELECT empna
+*      INTO lv_username
+*      FROM ztess0301
+*      WHERE empid = zsess23001-empid.
+*
+*      zsess23001-empna = lv_username.
+
+
+
+ENDMODULE.
